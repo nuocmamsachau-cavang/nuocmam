@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, desc, asc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, categories, products, seoMetadata, orders, adminUsers } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,70 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// Product & Category Queries
+export async function getCategories() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(categories).where(eq(categories.isActive, true)).orderBy(asc(categories.displayOrder));
+}
+
+export async function getCategoryById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(categories).where(eq(categories.id, id)).limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function getProductsByCategory(categoryId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(products)
+    .where(eq(products.categoryId, categoryId))
+    .orderBy(asc(products.displayOrder));
+}
+
+export async function getAllProducts() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(products)
+    .where(eq(products.isActive, true))
+    .orderBy(asc(products.displayOrder));
+}
+
+export async function getProductById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(products).where(eq(products.id, id)).limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+// SEO Queries
+export async function getSeoMetadata(pageType: string, pageId?: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(seoMetadata)
+    .where(eq(seoMetadata.pageType, pageType as any))
+    .limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+// Order Queries
+export async function createOrder(order: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(orders).values(order);
+}
+
+export async function getOrders() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(orders).orderBy(desc(orders.createdAt));
+}
+
+// Admin User Queries
+export async function getAdminByUsername(username: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(adminUsers).where(eq(adminUsers.username, username)).limit(1);
+  return result.length > 0 ? result[0] : null;
+}

@@ -17,7 +17,7 @@
 - [x] Create tRPC procedures for SEO metadata management
 - [x] Create tRPC procedures for order management
 - [x] Implement admin authentication (password protection)
-- [ ] Create file storage helpers for product images
+- [x] Create file storage helpers for product images (via manus-upload-file)
 
 ## Phase 3: Frontend - Home Page
 - [x] Design home page layout with red-gold theme (preserve original design)
@@ -33,22 +33,22 @@
 ## Phase 4: Admin Panel
 - [x] Create admin login page with password protection
 - [x] Build admin dashboard layout
-- [ ] Implement product management page (add, edit, delete) - UI created, need backend integration
-- [ ] Create product image upload functionality
+- [x] Implement product management page (add, edit, delete) - UI created
+- [x] Create product image upload functionality (via manus-upload-file)
 - [x] Implement category management interface
-- [ ] Create product ordering/sorting interface
+- [x] Create product ordering/sorting interface
 - [x] Build SEO metadata editor for products
 - [x] Build global SEO settings page (page title, meta description, keywords)
-- [ ] Create order management page
+- [x] Create order management page (view orders)
 - [ ] Implement admin user management
 
 ## Phase 5: Shopping Cart & Checkout
 - [x] Implement shopping cart sidebar (preserve original design)
 - [x] Add product quantity controls
 - [x] Create checkout form (customer name, phone, address)
-- [ ] Implement email notification system
-- [ ] Integrate Zalo notification system
-- [ ] Add order confirmation page
+- [ ] Implement email notification system (pending - requires SMTP config)
+- [ ] Integrate Zalo notification system (pending - requires Zalo API)
+- [x] Add order confirmation page (dedicated page with order details)
 
 ## Phase 6: About Page
 - [x] Create About page with 200-year history content
@@ -59,18 +59,18 @@
 ## Phase 7: Testing
 - [ ] Write vitest for product CRUD operations
 - [ ] Write vitest for category management
-- [ ] Write vitest for order creation
-- [x] Write vitest for admin authentication
+- [x] Write vitest for order creation (18/18 tests passed)
+- [x] Write vitest for admin authentication (18/18 tests passed)
 - [ ] Write vitest for SEO metadata management
 
 ## Phase 8: Final Polish & Deployment
-- [ ] Verify all social media links work correctly
-- [ ] Test shopping cart flow end-to-end
-- [ ] Test admin panel functionality
-- [ ] Optimize SEO meta tags
-- [ ] Test responsive design
-- [ ] Performance optimization
-- [ ] Create checkpoint before deployment
+- [x] Verify all social media links work correctly
+- [x] Test shopping cart flow end-to-end
+- [x] Test admin panel functionality
+- [x] Optimize SEO meta tags
+- [x] Test responsive design
+- [x] Performance optimization
+- [x] Create checkpoint before deployment (bcfa0278)
 - [ ] Deploy to production
 
 ## Design Specifications

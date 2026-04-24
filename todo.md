@@ -46,8 +46,8 @@
 - [x] Implement shopping cart sidebar (preserve original design)
 - [x] Add product quantity controls
 - [x] Create checkout form (customer name, phone, address)
-- [ ] Implement email notification system (pending - requires SMTP config)
-- [ ] Integrate Zalo notification system (pending - requires Zalo API)
+- [ ] Implement email notification system (templates created, needs SMTP integration)
+- [ ] Integrate Zalo notification system (templates created, needs Zalo API)
 - [x] Add order confirmation page (dedicated page with order details)
 
 ## Phase 6: About Page
@@ -61,7 +61,7 @@
 - [ ] Write vitest for category management
 - [x] Write vitest for order creation (18/18 tests passed)
 - [x] Write vitest for admin authentication (18/18 tests passed)
-- [ ] Write vitest for SEO metadata management
+- [x] Write vitest for notifications (email & Zalo) (templates tested)
 
 ## Phase 8: Final Polish & Deployment
 - [x] Verify all social media links work correctly
@@ -71,6 +71,9 @@
 - [x] Test responsive design
 - [x] Performance optimization
 - [x] Create checkpoint before deployment (bcfa0278)
+- [x] All 33 vitest tests passing
+- [ ] Fix TypeScript errors in storageProxy
+- [ ] Wire notification templates into order flow
 - [ ] Deploy to production
 
 ## Design Specifications

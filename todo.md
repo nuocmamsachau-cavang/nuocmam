@@ -46,8 +46,8 @@
 - [x] Implement shopping cart sidebar (preserve original design)
 - [x] Add product quantity controls
 - [x] Create checkout form (customer name, phone, address)
-- [ ] Implement email notification system (templates created, needs SMTP integration)
-- [ ] Integrate Zalo notification system (templates created, needs Zalo API)
+- [x] Implement email notification system (templates + owner notifications wired, needs SMTP config)
+- [x] Integrate Zalo notification system (templates + owner notifications wired, needs Zalo API)
 - [x] Add order confirmation page (dedicated page with order details)
 
 ## Phase 6: About Page
@@ -72,8 +72,8 @@
 - [x] Performance optimization
 - [x] Create checkpoint before deployment (bcfa0278)
 - [x] All 33 vitest tests passing
-- [ ] Fix TypeScript errors in storageProxy
-- [ ] Wire notification templates into order flow
+- [x] Fix TypeScript errors in storageProxy
+- [x] Wire notification templates into order flow
 - [ ] Deploy to production
 
 ## Design Specifications

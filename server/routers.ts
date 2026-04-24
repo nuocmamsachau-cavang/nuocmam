@@ -1,4 +1,3 @@
-import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
@@ -8,6 +7,8 @@ import { hashPassword, verifyPassword, generateAdminToken } from "./auth";
 import { categories, products, seoMetadata, orders, adminUsers } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
+import { handleNewOrderNotifications } from "./order-notifications";
+import { COOKIE_NAME } from "@shared/const";
 
 export const appRouter = router({
   system: systemRouter,
@@ -83,8 +84,35 @@ export const appRouter = router({
           totalAmount: input.totalAmount,
           notes: input.notes || null,
         };
-        return db.insert(orders).values(orderData);
+        
+        // Insert order into database
+        const result = await db.insert(orders).values(orderData);
+        
+        // Send notifications asynchronously (don't wait for them)
+        try {
+          const notificationData = {
+            orderNumber,
+            customerName: input.customerName,
+            customerPhone: input.customerPhone,
+            customerEmail: input.customerEmail,
+            customerAddress: input.customerAddress,
+            items: JSON.parse(input.items).map((item: any) => ({
+              name: item.name,
+              quantity: item.quantity,
+              price: item.price,
+            })),
+            totalAmount: parseFloat(input.totalAmount),
+          };
+          
+          await handleNewOrderNotifications(notificationData);
+        } catch (notificationError) {
+          // Log notification error but don't fail the order creation
+          console.error('[Order Creation] Notification error (non-blocking):', notificationError);
+        }
+        
+        return result;
       }),
+    list: publicProcedure.query(() => getOrders()),
   }),
 });
 

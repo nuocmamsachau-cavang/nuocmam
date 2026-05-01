@@ -25,7 +25,7 @@
 - [x] Add featured categories at top: Cá Lục, Cá Mực, Cá Cơm, Mắm Tôm
 - [x] Add legacy product groups below: Cốt Đặc Biệt, Combo & Quà Tặng, Sản Phẩm Khác
 - [x] Implement product card component with image, name, price, actions
-- [ ] Add product detail modal
+- [x] Add product detail modal (ProductDetailModal component created)
 - [x] Integrate YouTube video section
 - [x] Add social media links (Facebook, TikTok, Instagram)
 - [x] Add contact information and Google Maps link
@@ -40,7 +40,7 @@
 - [x] Build SEO metadata editor for products
 - [x] Build global SEO settings page (page title, meta description, keywords)
 - [x] Create order management page (view orders)
-- [ ] Implement admin user management
+- [x] Implement admin user management (AdminUsers page created with CRUD)
 
 ## Phase 5: Shopping Cart & Checkout
 - [x] Implement shopping cart sidebar (preserve original design)

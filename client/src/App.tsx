@@ -7,6 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import AdminPanel from "./pages/AdminPanel";
+import AdminUsers from "./pages/AdminUsers";
 import OrderConfirmation from "./pages/OrderConfirmation";
 
 function Router() {
@@ -16,6 +17,7 @@ function Router() {
       <Route path={"/"} component={Home} />
       <Route path={"/about"} component={About} />
       <Route path={"/admin"} component={AdminPanel} />
+      <Route path={"/admin/users"} component={AdminUsers} />
       <Route path={"/order-confirmation"} component={OrderConfirmation} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}

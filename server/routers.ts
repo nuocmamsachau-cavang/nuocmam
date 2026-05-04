@@ -2,6 +2,7 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
+import { notifyOwner } from "./_core/notification";
 import { z } from "zod";
 import { getCategories, getCategoryById, getAllProducts, getProductById, getSeoMetadata, createOrder, getOrders, getAdminByUsername, getDb } from "./db";
 import { hashPassword, verifyPassword, generateAdminToken } from "./auth";
@@ -83,7 +84,20 @@ export const appRouter = router({
           totalAmount: input.totalAmount,
           notes: input.notes || null,
         };
-        return db.insert(orders).values(orderData);
+        
+        const result = await db.insert(orders).values(orderData);
+        
+        // Send owner notification
+        try {
+          await notifyOwner({
+            title: `📦 Đơn hàng mới từ ${input.customerName}`,
+            content: `Đơn hàng: ${orderNumber}\nSố điện thoại: ${input.customerPhone}\nĐịa chỉ: ${input.customerAddress}\nTổng tiền: ${input.totalAmount}`,
+          });
+        } catch (err) {
+          console.error('Failed to send owner notification:', err);
+        }
+        
+        return result;
       }),
   }),
 });

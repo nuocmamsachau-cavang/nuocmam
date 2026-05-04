@@ -1,6 +1,11 @@
 import { drizzle } from 'drizzle-orm/mysql2';
-import { categories, products, adminUsers } from './drizzle/schema.js';
+import { categories, products, adminUsers } from './drizzle/schema.ts';
 import crypto from 'crypto';
+import 'dotenv/config';
+
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL environment variable is not set');
+}
 
 const db = drizzle(process.env.DATABASE_URL);
 

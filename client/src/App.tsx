@@ -7,8 +7,8 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import AdminPanel from "./pages/AdminPanel";
-import AdminUsers from "./pages/AdminUsers";
 import OrderConfirmation from "./pages/OrderConfirmation";
+import DomainManagement from "./pages/DomainManagement";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -17,8 +17,8 @@ function Router() {
       <Route path={"/"} component={Home} />
       <Route path={"/about"} component={About} />
       <Route path={"/admin"} component={AdminPanel} />
-      <Route path={"/admin/users"} component={AdminUsers} />
       <Route path={"/order-confirmation"} component={OrderConfirmation} />
+      <Route path={"/admin/domain"} component={DomainManagement} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

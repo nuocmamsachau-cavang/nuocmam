@@ -143,10 +143,11 @@ export default function AdminPanel() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
         <Tabs defaultValue="products" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="products">Sản Phẩm</TabsTrigger>
             <TabsTrigger value="categories">Danh Mục</TabsTrigger>
             <TabsTrigger value="seo">SEO</TabsTrigger>
+            <TabsTrigger value="domain">Domain</TabsTrigger>
           </TabsList>
 
           {/* Products Tab */}
@@ -307,6 +308,56 @@ export default function AdminPanel() {
                   Lưu SEO
                 </Button>
               </form>
+            </Card>
+          </TabsContent>
+
+          {/* Domain Management Tab */}
+          <TabsContent value="domain" className="space-y-6">
+            <Card className="p-6">
+              <h2 style={{ color: '#C41E3A' }} className="text-2xl font-bold mb-6">Quan Ly Custom Domain</h2>
+              <div className="space-y-6">
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <h3 className="font-bold text-blue-900 mb-3">Huong Dan Cau Hinh Custom Domain</h3>
+                  <p className="text-sm text-blue-800 mb-4">
+                    De cau hinh custom domain www.gosa.com.vn, vui long thuc hien cac buoc sau:
+                  </p>
+                  <ol className="list-decimal list-inside space-y-2 text-sm text-blue-800">
+                    <li><strong>Buoc 1:</strong> Dang nhap vao Manus Management UI (click icon panel ben phai)</li>
+                    <li><strong>Buoc 2:</strong> Vao Settings → Domains</li>
+                    <li><strong>Buoc 3:</strong> Click Add Domain va nhap www.gosa.com.vn</li>
+                    <li><strong>Buoc 4:</strong> Sao chep cac DNS records va them vao nha cung cap domain cua ban (Mat Bao)</li>
+                    <li><strong>Buoc 5:</strong> Cho 24-48 gio de DNS cap nhat</li>
+                  </ol>
+                </div>
+
+                <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                  <h3 className="font-bold text-amber-900 mb-3">Cac DNS Records Can Them</h3>
+                  <div className="space-y-2 text-sm text-amber-800 font-mono">
+                    <div className="bg-white p-2 rounded border">
+                      <p><strong>Type:</strong> CNAME</p>
+                      <p><strong>Name:</strong> www</p>
+                      <p><strong>Value:</strong> nuocmampro-fdjnndux.manus.space</p>
+                    </div>
+                    <div className="bg-white p-2 rounded border">
+                      <p><strong>Type:</strong> A</p>
+                      <p><strong>Name:</strong> @</p>
+                      <p><strong>Value:</strong> 34.126.131.234</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                  <h3 className="font-bold text-green-900 mb-3">Ho Tro</h3>
+                  <p className="text-sm text-green-800">
+                    Neu can ho tro hoac gap su co, vui long lien he qua:
+                  </p>
+                  <ul className="list-disc list-inside mt-2 text-sm text-green-800">
+                    <li>Email: admin@nuocmamcavang.com</li>
+                    <li>Facebook: <a href="https://www.facebook.com/nuocmamcavanglangsachau/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Nuoc Mam Ca Vang</a></li>
+                    <li>Manus Support: <a href="https://help.manus.im" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">help.manus.im</a></li>
+                  </ul>
+                </div>
+              </div>
             </Card>
           </TabsContent>
         </Tabs>

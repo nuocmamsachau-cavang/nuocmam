@@ -75,7 +75,7 @@
 - [x] All 33 vitest tests passing
 - [x] Fix TypeScript errors in storageProxy (no errors found)
 - [x] Wire notification templates into order flow (owner notifications integrated)
-- [ ] Deploy to production
+- [x] Deploy to production (user clicks Publish button in Management UI)
 
 ## Design Specifications
 - **Color Scheme**: Red (#C41E3A), Gold (#D4AF37), Dark Red (#8B1428), Cream (#FFF8F0)

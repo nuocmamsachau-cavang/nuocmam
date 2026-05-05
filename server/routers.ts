@@ -59,6 +59,7 @@ export const appRouter = router({
 
   // Orders
   orders: router({
+    list: publicProcedure.query(() => getOrders()),
     create: publicProcedure
       .input(z.object({
         customerName: z.string(),

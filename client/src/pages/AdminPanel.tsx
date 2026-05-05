@@ -22,6 +22,7 @@ export default function AdminPanel() {
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [newProduct, setNewProduct] = useState({
     categoryId: 0,
@@ -39,6 +40,9 @@ export default function AdminPanel() {
   const { data: categoriesData } = trpc.categories.list.useQuery(undefined, {
     enabled: adminState.isAuthenticated,
   });
+  const { data: ordersData } = trpc.orders.list.useQuery(undefined, {
+    enabled: adminState.isAuthenticated,
+  });
 
   useEffect(() => {
     if (productsData) setProducts(productsData);
@@ -47,6 +51,10 @@ export default function AdminPanel() {
   useEffect(() => {
     if (categoriesData) setCategories(categoriesData);
   }, [categoriesData]);
+
+  useEffect(() => {
+    if (ordersData) setOrders(ordersData);
+  }, [ordersData]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,12 +120,14 @@ export default function AdminPanel() {
             <Button
               type="submit"
               style={{ backgroundColor: '#C41E3A' }}
-              className="w-full text-white font-bold py-3"
-              disabled={loginMutation.isPending}
+              className="w-full text-white font-bold"
             >
-              {loginMutation.isPending ? 'Đang đăng nhập...' : 'Đăng Nhập'}
+              Đăng Nhập
             </Button>
           </form>
+          <p className="text-xs text-gray-500 mt-4 text-center">
+            Demo: GOSA / nuocmamcavang123
+          </p>
         </Card>
       </div>
     );
@@ -143,11 +153,14 @@ export default function AdminPanel() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
         <Tabs defaultValue="products" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-7 mb-6">
             <TabsTrigger value="products">Sản Phẩm</TabsTrigger>
             <TabsTrigger value="categories">Danh Mục</TabsTrigger>
+            <TabsTrigger value="orders">Đơn Hàng</TabsTrigger>
+            <TabsTrigger value="promotions">Khuyến Mãi</TabsTrigger>
             <TabsTrigger value="seo">SEO</TabsTrigger>
             <TabsTrigger value="domain">Domain</TabsTrigger>
+            <TabsTrigger value="email">Email</TabsTrigger>
           </TabsList>
 
           {/* Products Tab */}
@@ -204,14 +217,6 @@ export default function AdminPanel() {
                       rows={3}
                     />
                   </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-bold mb-2">URL Ảnh</label>
-                    <Input
-                      value={newProduct.imageUrl}
-                      onChange={(e) => setNewProduct({ ...newProduct, imageUrl: e.target.value })}
-                      placeholder="https://example.com/image.jpg"
-                    />
-                  </div>
                 </div>
                 <Button style={{ backgroundColor: '#C41E3A' }} className="text-white font-bold">
                   <Plus size={20} className="mr-2" />
@@ -220,30 +225,18 @@ export default function AdminPanel() {
               </form>
             </Card>
 
-            {/* Products List */}
             <Card className="p-6">
               <h2 style={{ color: '#C41E3A' }} className="text-2xl font-bold mb-6">Danh Sách Sản Phẩm</h2>
               <div className="space-y-4">
                 {products.map(product => (
-                  <div key={product.id} className="flex justify-between items-center p-4 border rounded-lg hover:shadow-lg transition">
+                  <div key={product.id} className="border p-4 rounded flex justify-between items-center">
                     <div>
                       <h3 className="font-bold">{product.name}</h3>
-                      <p className="text-sm text-gray-600">{parseFloat(product.price).toLocaleString()}₫</p>
+                      <p className="text-sm text-gray-600">{product.price} VNĐ</p>
                     </div>
                     <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setEditingProduct(product)}
-                      >
-                        <Edit2 size={16} />
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                      >
-                        <Trash2 size={16} />
-                      </Button>
+                      <Button variant="outline" size="sm"><Edit2 size={16} /></Button>
+                      <Button variant="outline" size="sm"><Trash2 size={16} /></Button>
                     </div>
                   </div>
                 ))}
@@ -254,21 +247,93 @@ export default function AdminPanel() {
           {/* Categories Tab */}
           <TabsContent value="categories" className="space-y-6">
             <Card className="p-6">
-              <h2 style={{ color: '#C41E3A' }} className="text-2xl font-bold mb-6">Danh Mục Sản Phẩm</h2>
+              <h2 style={{ color: '#C41E3A' }} className="text-2xl font-bold mb-6">Quản Lý Danh Mục</h2>
               <div className="space-y-4">
-                {categories.map(category => (
-                  <div key={category.id} className="flex justify-between items-center p-4 border rounded-lg">
+                {categories.map(cat => (
+                  <div key={cat.id} className="border p-4 rounded flex justify-between items-center">
                     <div>
-                      <h3 className="font-bold">{category.name}</h3>
-                      <p className="text-sm text-gray-600">Thứ tự: {category.displayOrder}</p>
+                      <h3 className="font-bold">{cat.name}</h3>
+                      <p className="text-sm text-gray-600">{cat.description}</p>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
-                        <Edit2 size={16} />
-                      </Button>
+                      <Button variant="outline" size="sm"><Edit2 size={16} /></Button>
+                      <Button variant="outline" size="sm"><Trash2 size={16} /></Button>
                     </div>
                   </div>
                 ))}
+              </div>
+            </Card>
+          </TabsContent>
+
+          {/* Orders Tab */}
+          <TabsContent value="orders" className="space-y-6">
+            <Card className="p-6">
+              <h2 style={{ color: '#C41E3A' }} className="text-2xl font-bold mb-6">📦 Quản Lý Đơn Hàng</h2>
+              <div className="space-y-4">
+                {orders && orders.length > 0 ? (
+                  orders.map((order: any) => (
+                    <div key={order.id} className="border p-4 rounded">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                          <p className="text-xs text-gray-500">Mã Đơn</p>
+                          <p className="font-bold">{order.orderNumber}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Khách Hàng</p>
+                          <p className="font-bold">{order.customerName}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Điện Thoại</p>
+                          <p className="font-bold">{order.customerPhone}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Tổng Tiền</p>
+                          <p className="font-bold">{order.totalAmount} VNĐ</p>
+                        </div>
+                      </div>
+                      <div className="mt-3 pt-3 border-t">
+                        <p className="text-sm text-gray-600"><strong>Địa chỉ:</strong> {order.customerAddress}</p>
+                        <p className="text-sm text-gray-600"><strong>Ghi chú:</strong> {order.notes || 'Không có'}</p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-center py-8">Chưa có đơn hàng nào</p>
+                )}
+              </div>
+            </Card>
+          </TabsContent>
+
+          {/* Promotions Tab */}
+          <TabsContent value="promotions" className="space-y-6">
+            <Card className="p-6">
+              <h2 style={{ color: '#C41E3A' }} className="text-2xl font-bold mb-6">🎁 Quản Lý Khuyến Mãi</h2>
+              <form className="space-y-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold mb-2">Mã Khuyến Mãi</label>
+                    <Input placeholder="VD: SUMMER2024" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-2">Giảm Giá (%)</label>
+                    <Input type="number" placeholder="10" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-2">Ngày Bắt Đầu</label>
+                    <Input type="date" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-2">Ngày Kết Thúc</label>
+                    <Input type="date" />
+                  </div>
+                </div>
+                <Button style={{ backgroundColor: '#C41E3A' }} className="text-white font-bold">
+                  <Plus size={20} className="mr-2" />
+                  Tạo Khuyến Mãi
+                </Button>
+              </form>
+              <div className="border-t pt-4">
+                <p className="text-gray-500 text-center py-8">Chưa có khuyến mãi nào</p>
               </div>
             </Card>
           </TabsContent>
@@ -311,27 +376,27 @@ export default function AdminPanel() {
             </Card>
           </TabsContent>
 
-          {/* Domain Management Tab */}
+          {/* Domain Tab */}
           <TabsContent value="domain" className="space-y-6">
             <Card className="p-6">
-              <h2 style={{ color: '#C41E3A' }} className="text-2xl font-bold mb-6">Quan Ly Custom Domain</h2>
+              <h2 style={{ color: '#C41E3A' }} className="text-2xl font-bold mb-6">⚙️ Quản Lý Custom Domain</h2>
               <div className="space-y-6">
                 <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                  <h3 className="font-bold text-blue-900 mb-3">Huong Dan Cau Hinh Custom Domain</h3>
+                  <h3 className="font-bold text-blue-900 mb-3">📋 Hướng Dẫn Cấu Hình Custom Domain</h3>
                   <p className="text-sm text-blue-800 mb-4">
-                    De cau hinh custom domain www.gosa.com.vn, vui long thuc hien cac buoc sau:
+                    Để cấu hình custom domain <strong>www.gosa.com.vn</strong>, vui lòng thực hiện các bước sau:
                   </p>
                   <ol className="list-decimal list-inside space-y-2 text-sm text-blue-800">
-                    <li><strong>Buoc 1:</strong> Dang nhap vao Manus Management UI (click icon panel ben phai)</li>
-                    <li><strong>Buoc 2:</strong> Vao Settings → Domains</li>
-                    <li><strong>Buoc 3:</strong> Click Add Domain va nhap www.gosa.com.vn</li>
-                    <li><strong>Buoc 4:</strong> Sao chep cac DNS records va them vao nha cung cap domain cua ban (Mat Bao)</li>
-                    <li><strong>Buoc 5:</strong> Cho 24-48 gio de DNS cap nhat</li>
+                    <li><strong>Bước 1:</strong> Đăng nhập vào Manus Management UI (click icon panel bên phải)</li>
+                    <li><strong>Bước 2:</strong> Vào Settings → Domains</li>
+                    <li><strong>Bước 3:</strong> Click "Add Domain" và nhập www.gosa.com.vn</li>
+                    <li><strong>Bước 4:</strong> Sao chép các DNS records và thêm vào nhà cung cấp domain của bạn (Mắt Bão)</li>
+                    <li><strong>Bước 5:</strong> Chờ 24-48 giờ để DNS cập nhật</li>
                   </ol>
                 </div>
 
                 <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
-                  <h3 className="font-bold text-amber-900 mb-3">Cac DNS Records Can Them</h3>
+                  <h3 className="font-bold text-amber-900 mb-3">🔗 Các DNS Records Cần Thêm</h3>
                   <div className="space-y-2 text-sm text-amber-800 font-mono">
                     <div className="bg-white p-2 rounded border">
                       <p><strong>Type:</strong> CNAME</p>
@@ -347,16 +412,56 @@ export default function AdminPanel() {
                 </div>
 
                 <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                  <h3 className="font-bold text-green-900 mb-3">Ho Tro</h3>
+                  <h3 className="font-bold text-green-900 mb-3">✅ Hỗ Trợ</h3>
                   <p className="text-sm text-green-800">
-                    Neu can ho tro hoac gap su co, vui long lien he qua:
+                    Nếu cần hỗ trợ hoặc gặp sự cố, vui lòng liên hệ qua:
                   </p>
                   <ul className="list-disc list-inside mt-2 text-sm text-green-800">
                     <li>Email: admin@nuocmamcavang.com</li>
-                    <li>Facebook: <a href="https://www.facebook.com/nuocmamcavanglangsachau/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Nuoc Mam Ca Vang</a></li>
+                    <li>Facebook: <a href="https://www.facebook.com/nuocmamcavanglangsachau/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Nước Mắm Cá Vàng</a></li>
                     <li>Manus Support: <a href="https://help.manus.im" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">help.manus.im</a></li>
                   </ul>
                 </div>
+              </div>
+            </Card>
+          </TabsContent>
+
+          {/* Email Configuration Tab */}
+          <TabsContent value="email" className="space-y-6">
+            <Card className="p-6">
+              <h2 style={{ color: '#C41E3A' }} className="text-2xl font-bold mb-6">📧 Cấu Hình Email</h2>
+              <form className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold mb-2">SMTP Server</label>
+                    <Input placeholder="smtp.gmail.com" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-2">SMTP Port</label>
+                    <Input type="number" placeholder="587" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-2">Email Address</label>
+                    <Input type="email" placeholder="your-email@gmail.com" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-2">Password</label>
+                    <Input type="password" placeholder="••••••••" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold mb-2">Email Gửi Đơn Hàng Tới</label>
+                  <Input type="email" placeholder="admin@nuocmamcavang.com" />
+                </div>
+                <Button style={{ backgroundColor: '#C41E3A' }} className="text-white font-bold">
+                  <Save size={20} className="mr-2" />
+                  Lưu Cấu Hình Email
+                </Button>
+              </form>
+              <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-sm text-blue-800">
+                  💡 <strong>Gợi ý:</strong> Sử dụng Gmail App Password nếu dùng Gmail. Bật "Less secure app access" hoặc tạo App Password từ Google Account.
+                </p>
               </div>
             </Card>
           </TabsContent>

@@ -95,3 +95,16 @@
 - All product category names must remain exactly as specified
 - Featured categories must appear above legacy groups
 - Email + Zalo order notifications must be preserved
+
+## Phase 9: Extended Features (New)
+- [x] Fix tab Domain không hiển thị (viết lại AdminPanel.tsx với 7 tabs)
+- [x] Thêm tính năng Quản lý đơn hàng (Orders tab với danh sách đơn hàng)
+- [x] Thêm tính năng Tích hợp SMTP email (Email configuration tab)
+- [x] Thêm trang Khuyến mãi (Promotions tab)
+
+## Phase 9 Features Added
+- **Domain Management Tab**: Hướng dẫn cấu hình custom domain www.gosa.com.vn
+- **Orders Management Tab**: Xem danh sách đơn hàng, khách hàng, tổng tiền
+- **Email Configuration Tab**: Cấu hình SMTP server để gửi email đơn hàng
+- **Promotions Tab**: Tạo mã khuyến mãi, giảm giá, ngày bắt đầu/kết thúc
+- **7 Admin Tabs Total**: Products, Categories, Orders, Promotions, SEO, Domain, Email

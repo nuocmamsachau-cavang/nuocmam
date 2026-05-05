@@ -1,6 +1,6 @@
 import { eq, desc, asc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, categories, products, seoMetadata, orders, adminUsers } from "../drizzle/schema";
+import { InsertUser, users, categories, products, seoMetadata, orders, adminUsers, promotions, emailConfig } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -155,4 +155,45 @@ export async function getAdminByUsername(username: string) {
   if (!db) return null;
   const result = await db.select().from(adminUsers).where(eq(adminUsers.username, username)).limit(1);
   return result.length > 0 ? result[0] : null;
+}
+
+// Promotion Queries
+export async function getPromotions() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(promotions).orderBy(desc(promotions.createdAt));
+}
+
+export async function createPromotion(promo: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(promotions).values(promo);
+}
+
+export async function getPromotionByCode(code: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(promotions)
+    .where(eq(promotions.code, code))
+    .limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+// Email Config Queries
+export async function getEmailConfig() {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(emailConfig).limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function saveEmailConfig(config: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const existing = await getEmailConfig();
+  if (existing) {
+    return db.update(emailConfig).set(config).where(eq(emailConfig.id, existing.id));
+  } else {
+    return db.insert(emailConfig).values(config);
+  }
 }

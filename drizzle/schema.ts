@@ -108,3 +108,37 @@ export const adminUsers = mysqlTable("adminUsers", {
 
 export type AdminUser = typeof adminUsers.$inferSelect;
 export type InsertAdminUser = typeof adminUsers.$inferInsert;
+// Promotions
+export const promotions = mysqlTable("promotions", {
+  id: int("id").autoincrement().primaryKey(),
+  code: varchar("code", { length: 64 }).notNull().unique(),
+  discountPercent: int("discountPercent").notNull(),
+  startDate: timestamp("startDate").notNull(),
+  endDate: timestamp("endDate").notNull(),
+  isActive: boolean("isActive").notNull().default(true),
+  usageCount: int("usageCount").notNull().default(0),
+  maxUsage: int("maxUsage"),
+  description: text("description"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Promotion = typeof promotions.$inferSelect;
+export type InsertPromotion = typeof promotions.$inferInsert;
+
+// Email Configuration
+export const emailConfig = mysqlTable("emailConfig", {
+  id: int("id").autoincrement().primaryKey(),
+  smtpServer: varchar("smtpServer", { length: 255 }).notNull(),
+  smtpPort: int("smtpPort").notNull(),
+  smtpUser: varchar("smtpUser", { length: 255 }).notNull(),
+  smtpPassword: varchar("smtpPassword", { length: 512 }).notNull(),
+  fromEmail: varchar("fromEmail", { length: 320 }).notNull(),
+  toEmail: varchar("toEmail", { length: 320 }).notNull(),
+  isActive: boolean("isActive").notNull().default(false),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type EmailConfig = typeof emailConfig.$inferSelect;
+export type InsertEmailConfig = typeof emailConfig.$inferInsert;

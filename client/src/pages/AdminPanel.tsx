@@ -33,6 +33,15 @@ export default function AdminPanel() {
     imageUrl: '',
   });
 
+  const [promotions, setPromotions] = useState<any[]>([]);
+  const [newPromotion, setNewPromotion] = useState({
+    code: '',
+    discountPercent: '',
+    startDate: '',
+    endDate: '',
+    description: '',
+  });
+
   const loginMutation = trpc.admin.login.useMutation();
   const { data: productsData } = trpc.products.list.useQuery(undefined, {
     enabled: adminState.isAuthenticated,
@@ -43,6 +52,10 @@ export default function AdminPanel() {
   const { data: ordersData } = trpc.orders.list.useQuery(undefined, {
     enabled: adminState.isAuthenticated,
   });
+  const { data: promotionsData } = trpc.promotions.list.useQuery(undefined, {
+    enabled: adminState.isAuthenticated,
+  });
+  const createPromotionMutation = trpc.promotions.create.useMutation();
 
   useEffect(() => {
     if (productsData) setProducts(productsData);
@@ -55,6 +68,10 @@ export default function AdminPanel() {
   useEffect(() => {
     if (ordersData) setOrders(ordersData);
   }, [ordersData]);
+
+  useEffect(() => {
+    if (promotionsData) setPromotions(promotionsData);
+  }, [promotionsData]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,6 +104,28 @@ export default function AdminPanel() {
       username: '',
       isAuthenticated: false,
     });
+  };
+
+  const handleCreatePromotion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPromotion.code || !newPromotion.discountPercent || !newPromotion.startDate || !newPromotion.endDate) {
+      alert('Vui lòng điền đầy đủ thông tin');
+      return;
+    }
+    try {
+      await createPromotionMutation.mutateAsync({
+        code: newPromotion.code,
+        discountPercent: parseInt(newPromotion.discountPercent),
+        startDate: new Date(newPromotion.startDate),
+        endDate: new Date(newPromotion.endDate),
+        description: newPromotion.description || '',
+      });
+      setNewPromotion({ code: '', discountPercent: '', startDate: '', endDate: '', description: '' });
+      alert('Tạo khuyến mãi thành công!');
+    } catch (error) {
+      alert('Lỗi khi tạo khuyến mãi');
+      console.error(error);
+    }
   };
 
   if (!adminState.isAuthenticated) {
@@ -308,32 +347,48 @@ export default function AdminPanel() {
           <TabsContent value="promotions" className="space-y-6">
             <Card className="p-6">
               <h2 style={{ color: '#C41E3A' }} className="text-2xl font-bold mb-6">🎁 Quản Lý Khuyến Mãi</h2>
-              <form className="space-y-4 mb-6">
+              <form onSubmit={handleCreatePromotion} className="space-y-4 mb-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-bold mb-2">Mã Khuyến Mãi</label>
-                    <Input placeholder="VD: SUMMER2024" />
+                    <Input value={newPromotion.code} onChange={(e) => setNewPromotion({...newPromotion, code: e.target.value})} placeholder="VD: SUMMER2024" />
                   </div>
                   <div>
                     <label className="block text-sm font-bold mb-2">Giảm Giá (%)</label>
-                    <Input type="number" placeholder="10" />
+                    <Input type="number" value={newPromotion.discountPercent} onChange={(e) => setNewPromotion({...newPromotion, discountPercent: e.target.value})} placeholder="10" />
                   </div>
                   <div>
                     <label className="block text-sm font-bold mb-2">Ngày Bắt Đầu</label>
-                    <Input type="date" />
+                    <Input type="date" value={newPromotion.startDate} onChange={(e) => setNewPromotion({...newPromotion, startDate: e.target.value})} />
                   </div>
                   <div>
                     <label className="block text-sm font-bold mb-2">Ngày Kết Thúc</label>
-                    <Input type="date" />
+                    <Input type="date" value={newPromotion.endDate} onChange={(e) => setNewPromotion({...newPromotion, endDate: e.target.value})} />
                   </div>
                 </div>
-                <Button style={{ backgroundColor: '#C41E3A' }} className="text-white font-bold">
+                <Button type="submit" style={{ backgroundColor: '#C41E3A' }} className="text-white font-bold">
                   <Plus size={20} className="mr-2" />
                   Tạo Khuyến Mãi
                 </Button>
               </form>
               <div className="border-t pt-4">
-                <p className="text-gray-500 text-center py-8">Chưa có khuyến mãi nào</p>
+                <h3 className="font-bold mb-4">Danh Sách Khuyến Mãi</h3>
+                {promotions && promotions.length > 0 ? (
+                  <div className="space-y-3">
+                    {promotions.map((promo: any) => (
+                      <div key={promo.id} className="border p-4 rounded bg-yellow-50">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          <div><p className="text-xs text-gray-500">Mã</p><p className="font-bold">{promo.code}</p></div>
+                          <div><p className="text-xs text-gray-500">Giảm Giá</p><p className="font-bold">{promo.discountPercent}%</p></div>
+                          <div><p className="text-xs text-gray-500">Từ</p><p className="font-bold text-sm">{new Date(promo.startDate).toLocaleDateString('vi-VN')}</p></div>
+                          <div><p className="text-xs text-gray-500">Đến</p><p className="font-bold text-sm">{new Date(promo.endDate).toLocaleDateString('vi-VN')}</p></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-center py-8">Chưa có khuyến mãi nào</p>
+                )}
               </div>
             </Card>
           </TabsContent>

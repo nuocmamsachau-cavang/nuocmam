@@ -4,9 +4,9 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { notifyOwner } from "./_core/notification";
 import { z } from "zod";
-import { getCategories, getCategoryById, getAllProducts, getProductById, getSeoMetadata, createOrder, getOrders, getAdminByUsername, getDb, getPromotions, createPromotion, getEmailConfig, saveEmailConfig } from "./db";
+import { getCategories, getCategoryById, getAllProducts, getProductById, getSeoMetadata, createOrder, getOrders, getAdminByUsername, getDb, getPromotions, createPromotion, getEmailConfig, saveEmailConfig, getBlogPosts, getBlogPostBySlug, createBlogPost, getAllBlogPosts, getProductReviews, getApprovedReviews, createProductReview, getAllProductReviews, approveProductReview } from "./db";
 import { hashPassword, verifyPassword, generateAdminToken } from "./auth";
-import { categories, products, seoMetadata, orders, adminUsers, promotions, emailConfig } from "../drizzle/schema";
+import { categories, products, seoMetadata, orders, adminUsers, promotions, emailConfig, blogPosts, productReviews } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
@@ -172,6 +172,50 @@ export const appRouter = router({
         }
       };
     }),
+  }),
+
+  // Blog Posts
+  blog: router({
+    list: publicProcedure.query(() => getBlogPosts()),
+    getBySlug: publicProcedure.input(z.string()).query(({ input }) => getBlogPostBySlug(input)),
+    create: publicProcedure
+      .input(z.object({
+        title: z.string(),
+        slug: z.string(),
+        content: z.string(),
+        excerpt: z.string().optional(),
+        imageUrl: z.string().optional(),
+        imageKey: z.string().optional(),
+        author: z.string().optional(),
+        category: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        return createBlogPost(input);
+      }),
+    getAll: publicProcedure.query(() => getAllBlogPosts()),
+  }),
+
+  // Product Reviews
+  reviews: router({
+    getByProduct: publicProcedure.input(z.number()).query(({ input }) => getProductReviews(input)),
+    getApproved: publicProcedure.input(z.number()).query(({ input }) => getApprovedReviews(input)),
+    create: publicProcedure
+      .input(z.object({
+        productId: z.number(),
+        customerName: z.string(),
+        customerEmail: z.string().email().optional(),
+        rating: z.number().min(1).max(5),
+        title: z.string(),
+        content: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        return createProductReview({
+          ...input,
+          isApproved: false,
+        });
+      }),
+    getAll: publicProcedure.query(() => getAllProductReviews()),
+    approve: publicProcedure.input(z.number()).mutation(({ input }) => approveProductReview(input)),
   }),
 });
 

@@ -142,3 +142,43 @@ export const emailConfig = mysqlTable("emailConfig", {
 
 export type EmailConfig = typeof emailConfig.$inferSelect;
 export type InsertEmailConfig = typeof emailConfig.$inferInsert;
+
+// Blog Posts
+export const blogPosts = mysqlTable("blogPosts", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  content: text("content").notNull(),
+  excerpt: text("excerpt"),
+  imageUrl: varchar("imageUrl", { length: 512 }),
+  imageKey: varchar("imageKey", { length: 512 }),
+  author: varchar("author", { length: 255 }).notNull().default("Nước Mắm Cá Vàng"),
+  category: varchar("category", { length: 100 }).notNull().default("Kiến Thức"),
+  isPublished: boolean("isPublished").notNull().default(true),
+  viewCount: int("viewCount").notNull().default(0),
+  publishedAt: timestamp("publishedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BlogPost = typeof blogPosts.$inferSelect;
+export type InsertBlogPost = typeof blogPosts.$inferInsert;
+
+// Product Reviews
+export const productReviews = mysqlTable("productReviews", {
+  id: int("id").autoincrement().primaryKey(),
+  productId: int("productId").notNull(),
+  userId: int("userId"),
+  customerName: varchar("customerName", { length: 255 }).notNull(),
+  customerEmail: varchar("customerEmail", { length: 320 }),
+  rating: int("rating").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  isApproved: boolean("isApproved").notNull().default(false),
+  helpfulCount: int("helpfulCount").notNull().default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ProductReview = typeof productReviews.$inferSelect;
+export type InsertProductReview = typeof productReviews.$inferInsert;

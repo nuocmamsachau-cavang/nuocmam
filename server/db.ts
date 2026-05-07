@@ -1,6 +1,6 @@
 import { eq, desc, asc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, categories, products, seoMetadata, orders, adminUsers, promotions, emailConfig } from "../drizzle/schema";
+import { InsertUser, users, categories, products, seoMetadata, orders, adminUsers, promotions, emailConfig, blogPosts, productReviews } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -196,4 +196,69 @@ export async function saveEmailConfig(config: any) {
   } else {
     return db.insert(emailConfig).values(config);
   }
+}
+
+// Blog Posts Queries
+export async function getBlogPosts() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(blogPosts)
+    .where(eq(blogPosts.isPublished, true))
+    .orderBy(desc(blogPosts.publishedAt));
+}
+
+export async function getBlogPostBySlug(slug: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(blogPosts)
+    .where(eq(blogPosts.slug, slug))
+    .limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function createBlogPost(post: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(blogPosts).values(post);
+}
+
+export async function getAllBlogPosts() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(blogPosts).orderBy(desc(blogPosts.createdAt));
+}
+
+// Product Reviews Queries
+export async function getProductReviews(productId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(productReviews)
+    .where(eq(productReviews.productId, productId))
+    .orderBy(desc(productReviews.createdAt));
+}
+
+export async function getApprovedReviews(productId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(productReviews)
+    .where(eq(productReviews.productId, productId))
+    .orderBy(desc(productReviews.createdAt));
+}
+
+export async function createProductReview(review: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(productReviews).values(review);
+}
+
+export async function getAllProductReviews() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(productReviews).orderBy(desc(productReviews.createdAt));
+}
+
+export async function approveProductReview(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(productReviews).set({ isApproved: true }).where(eq(productReviews.id, id));
 }

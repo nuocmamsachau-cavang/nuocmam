@@ -436,6 +436,22 @@ export default function AdminPanel() {
             <Card className="p-6">
               <h2 style={{ color: '#C41E3A' }} className="text-2xl font-bold mb-6">⚙️ Quản Lý Custom Domain</h2>
               <div className="space-y-6">
+                {/* Custom Domain Form */}
+                <div className="bg-gradient-to-r from-red-50 to-yellow-50 p-6 rounded-lg border-2 border-red-200">
+                  <h3 className="font-bold text-lg mb-4" style={{ color: '#C41E3A' }}>🌐 Thêm Custom Domain</h3>
+                  <form className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-bold mb-2">Domain của bạn</label>
+                      <div className="flex gap-2">
+                        <Input placeholder="VD: www.gosa.com.vn" className="flex-1" />
+                        <Button style={{ backgroundColor: '#C41E3A' }} className="text-white font-bold whitespace-nowrap">
+                          Thêm Domain
+                        </Button>
+                      </div>
+                      <p className="text-xs text-gray-600 mt-2">💡 Nhập domain của bạn (VD: www.gosa.com.vn hoặc gosa.com.vn)</p>
+                    </div>
+                  </form>
+                </div>
                 <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                   <h3 className="font-bold text-blue-900 mb-3">📋 Hướng Dẫn Cấu Hình Custom Domain</h3>
                   <p className="text-sm text-blue-800 mb-4">

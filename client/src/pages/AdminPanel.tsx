@@ -200,6 +200,8 @@ export default function AdminPanel() {
             <TabsTrigger value="seo">SEO</TabsTrigger>
             <TabsTrigger value="domain">Domain</TabsTrigger>
             <TabsTrigger value="email">Email</TabsTrigger>
+            <TabsTrigger value="blog">Bài Viết</TabsTrigger>
+            <TabsTrigger value="reviews">Đánh Giá</TabsTrigger>
           </TabsList>
 
           {/* Products Tab */}
@@ -533,6 +535,89 @@ export default function AdminPanel() {
                 <p className="text-sm text-blue-800">
                   💡 <strong>Gợi ý:</strong> Sử dụng Gmail App Password nếu dùng Gmail. Bật "Less secure app access" hoặc tạo App Password từ Google Account.
                 </p>
+              </div>
+            </Card>
+          </TabsContent>
+
+          {/* Blog Management Tab */}
+          <TabsContent value="blog" className="space-y-6">
+            <Card className="p-6">
+              <h3 className="text-xl font-bold mb-4" style={{ color: '#C41E3A' }}>Quản Lý Bài Viết</h3>
+              <form className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold mb-2">Tiêu Đề</label>
+                    <Input placeholder="Tiêu đề bài viết" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-2">Slug</label>
+                    <Input placeholder="slug-bai-viet" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold mb-2">Nội Dung</label>
+                  <textarea className="w-full p-2 border rounded" rows={6} placeholder="Nội dung bài viết..."></textarea>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold mb-2">Danh Mục</label>
+                    <Input placeholder="Kiến Thức, Công Thức, Lịch Sử..." />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-2">Tác Giả</label>
+                    <Input placeholder="Nước Mắm Cá Vàng" />
+                  </div>
+                </div>
+                <Button style={{ backgroundColor: '#C41E3A' }} className="text-white font-bold">
+                  <Plus size={20} className="mr-2" />
+                  Thêm Bài Viết Mới
+                </Button>
+              </form>
+              <div className="mt-6">
+                <h4 className="font-bold mb-3">Danh Sách Bài Viết</h4>
+                <div className="space-y-2">
+                  <div className="p-3 bg-gray-50 rounded flex justify-between items-center">
+                    <div>
+                      <p className="font-semibold">Hướng Dẫn Chọn Nước Mắm Quốn</p>
+                      <p className="text-sm text-gray-600">Danh mục: Kiến Thức</p>
+                    </div>
+                    <div className="space-x-2">
+                      <Button size="sm" variant="outline"><Edit2 size={16} /></Button>
+                      <Button size="sm" variant="outline" className="text-red-600"><Trash2 size={16} /></Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </TabsContent>
+
+          {/* Reviews Management Tab */}
+          <TabsContent value="reviews" className="space-y-6">
+            <Card className="p-6">
+              <h3 className="text-xl font-bold mb-4" style={{ color: '#C41E3A' }}>Quản Lý Đánh Giá Sản Phẩm</h3>
+              <div className="space-y-4">
+                <div className="flex gap-2 mb-4">
+                  <Button style={{ backgroundColor: '#C41E3A' }} className="text-white font-bold">Chờ Duyệt</Button>
+                  <Button variant="outline">Đã Duyệt</Button>
+                  <Button variant="outline">Từ Chối</Button>
+                </div>
+                <div className="space-y-3">
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <p className="font-bold">Sản phẩm rất tốt!</p>
+                        <p className="text-sm text-gray-600">Người dùng: Nguyễn Văn A</p>
+                        <p className="text-sm text-gray-600">Sản phẩm: Cá Lục Premium</p>
+                      </div>
+                      <div className="text-yellow-500 font-bold">★★★★★</div>
+                    </div>
+                    <p className="text-sm mb-3">Mắm rất ngon, chất lượng cao, giao hàng nhanh. Rất hài lòng!</p>
+                    <div className="flex gap-2">
+                      <Button size="sm" style={{ backgroundColor: '#C41E3A' }} className="text-white">Duyệt</Button>
+                      <Button size="sm" variant="outline" className="text-red-600">Từ Chối</Button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </Card>
           </TabsContent>

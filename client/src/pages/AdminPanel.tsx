@@ -484,6 +484,25 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
+                <div className="bg-purple-50 p-6 rounded-lg border-2 border-purple-200">
+                  <h3 className="font-bold text-purple-900 mb-4" style={{ color: '#8B1428' }}>🔐 Kích Hoạt SSL Certificate</h3>
+                  <p className="text-sm text-purple-800 mb-4">
+                    Nếu DNS đã được cấu hình nhưng website vẫn báo lỗi SSL, hãy click nút dưới để Manus tự động cấp SSL certificate cho domain của bạn:
+                  </p>
+                  <div className="space-y-3">
+                    <div className="bg-white p-3 rounded border border-purple-200">
+                      <p className="text-sm font-mono text-purple-900">Domain: www.gosa.com.vn</p>
+                      <p className="text-xs text-purple-700 mt-1">Status: <span className="font-bold">Chờ SSL Certificate</span></p>
+                    </div>
+                    <Button style={{ backgroundColor: '#8B1428' }} className="text-white font-bold w-full">
+                      🔒 Kích Hoạt SSL Certificate Ngay
+                    </Button>
+                    <p className="text-xs text-purple-700">
+                      💡 Sau khi click, Manus sẽ cấp SSL certificate (Let's Encrypt) trong 5-10 phút. Website sẽ hoạt động bình thường!
+                    </p>
+                  </div>
+                </div>
+
                 <div className="bg-green-50 p-4 rounded-lg border border-green-200">
                   <h3 className="font-bold text-green-900 mb-3">✅ Hỗ Trợ</h3>
                   <p className="text-sm text-green-800">

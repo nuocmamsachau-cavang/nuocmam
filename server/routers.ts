@@ -195,6 +195,40 @@ export const appRouter = router({
     getAll: publicProcedure.query(() => getAllBlogPosts()),
   }),
 
+  // Domain Management
+  domain: router({
+    activateSSL: publicProcedure
+      .input(z.object({ domain: z.string() }))
+      .mutation(async ({ input }) => {
+        try {
+          const forgeUrl = process.env.BUILT_IN_FORGE_API_URL;
+          const forgeKey = process.env.BUILT_IN_FORGE_API_KEY;
+          
+          if (!forgeUrl || !forgeKey) {
+            throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'API configuration missing' });
+          }
+          
+          const response = await fetch(`${forgeUrl}/domains/activate-ssl`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${forgeKey}`,
+            },
+            body: JSON.stringify({ domain: input.domain }),
+          });
+          
+          if (!response.ok) {
+            throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to activate SSL certificate' });
+          }
+          
+          const data = await response.json();
+          return { success: true, message: 'SSL certificate activation initiated', data };
+        } catch (error) {
+          console.error('SSL activation error:', error);
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to activate SSL certificate' });
+        }
+      }),
+  }),
   // Product Reviews
   reviews: router({
     getByProduct: publicProcedure.input(z.number()).query(({ input }) => getProductReviews(input)),

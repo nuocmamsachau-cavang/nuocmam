@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, Plus, Edit2, Trash2, Save } from 'lucide-react';
+import { LogOut, Plus, Edit2, Trash2, Save, Loader } from 'lucide-react';
 
 interface AdminState {
   token: string | null;
@@ -41,8 +41,11 @@ export default function AdminPanel() {
     endDate: '',
     description: '',
   });
+  const [sslLoading, setSslLoading] = useState(false);
+  const [sslMessage, setSslMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const loginMutation = trpc.admin.login.useMutation();
+  const sslMutation = trpc.domain.activateSSL.useMutation();
   const { data: productsData } = trpc.products.list.useQuery(undefined, {
     enabled: adminState.isAuthenticated,
   });
@@ -93,6 +96,25 @@ export default function AdminPanel() {
       setLoginForm({ username: '', password: '' });
     } catch (error) {
       alert('Đăng nhập thất bại. Vui lòng kiểm tra tài khoản và mật khẩu.');
+    }
+  };
+
+  const handleSSLActivation = async () => {
+    setSslLoading(true);
+    setSslMessage(null);
+    try {
+      const result = await sslMutation.mutateAsync({ domain: 'www.gosa.com.vn' });
+      setSslMessage({
+        type: 'success',
+        text: '✅ SSL certificate activation initiated! Manus sẽ cấp certificate trong 5-10 phút.',
+      });
+    } catch (error: any) {
+      setSslMessage({
+        type: 'error',
+        text: `❌ Lỗi: ${error?.message || 'Failed to activate SSL'}`,
+      });
+    } finally {
+      setSslLoading(false);
     }
   };
 
@@ -494,9 +516,30 @@ export default function AdminPanel() {
                       <p className="text-sm font-mono text-purple-900">Domain: www.gosa.com.vn</p>
                       <p className="text-xs text-purple-700 mt-1">Status: <span className="font-bold">Chờ SSL Certificate</span></p>
                     </div>
-                    <Button style={{ backgroundColor: '#8B1428' }} className="text-white font-bold w-full">
-                      🔒 Kích Hoạt SSL Certificate Ngay
+                    <Button
+                      onClick={handleSSLActivation}
+                      disabled={sslLoading}
+                      style={{ backgroundColor: sslLoading ? '#ccc' : '#8B1428' }}
+                      className="text-white font-bold w-full flex items-center justify-center gap-2"
+                    >
+                      {sslLoading ? (
+                        <>
+                          <Loader className="w-4 h-4 animate-spin" />
+                          Đang xử lý...
+                        </>
+                      ) : (
+                        '🔒 Kích Hoạt SSL Certificate Ngay'
+                      )}
                     </Button>
+                    {sslMessage && (
+                      <div className={`p-3 rounded text-sm ${
+                        sslMessage.type === 'success'
+                          ? 'bg-green-100 text-green-800 border border-green-300'
+                          : 'bg-red-100 text-red-800 border border-red-300'
+                      }`}>
+                        {sslMessage.text}
+                      </div>
+                    )}
                     <p className="text-xs text-purple-700">
                       💡 Sau khi click, Manus sẽ cấp SSL certificate (Let's Encrypt) trong 5-10 phút. Website sẽ hoạt động bình thường!
                     </p>

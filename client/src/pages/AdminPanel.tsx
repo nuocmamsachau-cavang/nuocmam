@@ -43,9 +43,20 @@ export default function AdminPanel() {
   });
   const [sslLoading, setSslLoading] = useState(false);
   const [sslMessage, setSslMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [newCategory, setNewCategory] = useState({
+    name: '',
+    slug: '',
+    description: '',
+    displayOrder: '',
+  });
+  const [showNewCategoryForm, setShowNewCategoryForm] = useState(false);
 
   const loginMutation = trpc.admin.login.useMutation();
   const sslMutation = trpc.domain.activateSSL.useMutation();
+  const updateCategoryMutation = trpc.categories.update.useMutation();
+  const deleteCategoryMutation = trpc.categories.delete.useMutation();
+  const createCategoryMutation = trpc.categories.create.useMutation();
   const { data: productsData } = trpc.products.list.useQuery(undefined, {
     enabled: adminState.isAuthenticated,
   });
@@ -146,6 +157,64 @@ export default function AdminPanel() {
       alert('Tạo khuyến mãi thành công!');
     } catch (error) {
       alert('Lỗi khi tạo khuyến mãi');
+      console.error(error);
+    }
+  };
+
+  const handleCreateCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCategory.name || !newCategory.slug) {
+      alert('Vui lòng điền tên và slug danh mục');
+      return;
+    }
+    try {
+      const result = await createCategoryMutation.mutateAsync({
+        name: newCategory.name,
+        slug: newCategory.slug,
+        description: newCategory.description || '',
+        displayOrder: parseInt(newCategory.displayOrder) || 0,
+      });
+      setCategories([...categories, result]);
+      setNewCategory({ name: '', slug: '', description: '', displayOrder: '' });
+      setShowNewCategoryForm(false);
+      alert('Tạo danh mục thành công!');
+    } catch (error) {
+      alert('Lỗi khi tạo danh mục');
+      console.error(error);
+    }
+  };
+
+  const handleUpdateCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCategory || !editingCategory.name || !editingCategory.slug) {
+      alert('Vui lòng điền đầy đủ thông tin');
+      return;
+    }
+    try {
+      await updateCategoryMutation.mutateAsync({
+        id: editingCategory.id,
+        name: editingCategory.name,
+        slug: editingCategory.slug,
+        description: editingCategory.description || '',
+        displayOrder: parseInt(editingCategory.displayOrder) || 0,
+      });
+      setCategories(categories.map(cat => cat.id === editingCategory.id ? editingCategory : cat));
+      setEditingCategory(null);
+      alert('Cập nhật danh mục thành công!');
+    } catch (error) {
+      alert('Lỗi khi cập nhật danh mục');
+      console.error(error);
+    }
+  };
+
+  const handleDeleteCategory = async (id: number) => {
+    if (!confirm('Bạn chắc chắn muốn xóa danh mục này?')) return;
+    try {
+      await deleteCategoryMutation.mutateAsync(id);
+      setCategories(categories.filter(cat => cat.id !== id));
+      alert('Xóa danh mục thành công!');
+    } catch (error) {
+      alert('Lỗi khi xóa danh mục');
       console.error(error);
     }
   };
@@ -311,16 +380,70 @@ export default function AdminPanel() {
           <TabsContent value="categories" className="space-y-6">
             <Card className="p-6">
               <h2 style={{ color: '#C41E3A' }} className="text-2xl font-bold mb-6">Quản Lý Danh Mục</h2>
+              
+              {/* Add/Edit Category Form */}
+              {showNewCategoryForm || editingCategory ? (
+                <form onSubmit={editingCategory ? handleUpdateCategory : handleCreateCategory} className="space-y-4 mb-6 p-4 bg-yellow-50 rounded border border-yellow-200">
+                  <h3 className="font-bold text-lg">{editingCategory ? 'Sửa Danh Mục' : 'Thêm Danh Mục Mới'}</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-bold mb-2">Tên Danh Mục</label>
+                      <Input 
+                        value={editingCategory ? editingCategory.name : newCategory.name} 
+                        onChange={(e) => editingCategory ? setEditingCategory({...editingCategory, name: e.target.value}) : setNewCategory({...newCategory, name: e.target.value})} 
+                        placeholder="VD: Cá Lục"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold mb-2">Slug</label>
+                      <Input 
+                        value={editingCategory ? editingCategory.slug : newCategory.slug} 
+                        onChange={(e) => editingCategory ? setEditingCategory({...editingCategory, slug: e.target.value}) : setNewCategory({...newCategory, slug: e.target.value})} 
+                        placeholder="ca-luc"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold mb-2">Thứ Tự Hiển Thị</label>
+                      <Input 
+                        type="number"
+                        value={editingCategory ? editingCategory.displayOrder : newCategory.displayOrder} 
+                        onChange={(e) => editingCategory ? setEditingCategory({...editingCategory, displayOrder: e.target.value}) : setNewCategory({...newCategory, displayOrder: e.target.value})} 
+                        placeholder="0"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold mb-2">Mô Tả (Tùy Chọn)</label>
+                      <Input 
+                        value={editingCategory ? editingCategory.description : newCategory.description} 
+                        onChange={(e) => editingCategory ? setEditingCategory({...editingCategory, description: e.target.value}) : setNewCategory({...newCategory, description: e.target.value})} 
+                        placeholder="Mô tả danh mục"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button type="submit" style={{ backgroundColor: '#C41E3A' }} className="text-white">{editingCategory ? 'Cập Nhật' : 'Thêm'}</Button>
+                    <Button type="button" variant="outline" onClick={() => {setShowNewCategoryForm(false); setEditingCategory(null);}}>Hủy</Button>
+                  </div>
+                </form>
+              ) : (
+                <Button style={{ backgroundColor: '#C41E3A' }} className="text-white mb-4" onClick={() => setShowNewCategoryForm(true)}>
+                  <Plus size={16} className="mr-2" /> Thêm Danh Mục Mới
+                </Button>
+              )}
+              
+              {/* Categories List */}
               <div className="space-y-4">
                 {categories.map(cat => (
-                  <div key={cat.id} className="border p-4 rounded flex justify-between items-center">
+                  <div key={cat.id} className="border p-4 rounded flex justify-between items-center hover:bg-gray-50">
                     <div>
                       <h3 className="font-bold">{cat.name}</h3>
-                      <p className="text-sm text-gray-600">{cat.description}</p>
+                      <p className="text-sm text-gray-600">Slug: {cat.slug}</p>
+                      {cat.description && <p className="text-sm text-gray-600">{cat.description}</p>}
+                      <p className="text-xs text-gray-500">Thứ tự: {cat.displayOrder}</p>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm"><Edit2 size={16} /></Button>
-                      <Button variant="outline" size="sm"><Trash2 size={16} /></Button>
+                      <Button variant="outline" size="sm" onClick={() => setEditingCategory(cat)}><Edit2 size={16} /></Button>
+                      <Button variant="outline" size="sm" onClick={() => handleDeleteCategory(cat.id)}><Trash2 size={16} /></Button>
                     </div>
                   </div>
                 ))}

@@ -48,6 +48,40 @@ export const appRouter = router({
   categories: router({
     list: publicProcedure.query(() => getCategories()),
     getById: publicProcedure.input(z.number()).query(({ input }) => getCategoryById(input)),
+    create: publicProcedure
+      .input(z.object({ name: z.string(), slug: z.string(), description: z.string().optional(), displayOrder: z.number().optional() }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        await db.insert(categories).values({
+          name: input.name,
+          slug: input.slug,
+          description: input.description || '',
+          displayOrder: input.displayOrder || 0,
+        });
+        return { success: true, ...input };
+      }),
+    update: publicProcedure
+      .input(z.object({ id: z.number(), name: z.string(), slug: z.string(), description: z.string().optional(), displayOrder: z.number().optional() }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        await db.update(categories).set({
+          name: input.name,
+          slug: input.slug,
+          description: input.description || '',
+          displayOrder: input.displayOrder || 0,
+        }).where(eq(categories.id, input.id));
+        return { success: true };
+      }),
+    delete: publicProcedure
+      .input(z.number())
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        await db.delete(categories).where(eq(categories.id, input));
+        return { success: true };
+      }),
   }),
 
   // SEO Management

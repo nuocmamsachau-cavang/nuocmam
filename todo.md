@@ -108,3 +108,17 @@
 - **Email Configuration Tab**: Cấu hình SMTP server để gửi email đơn hàng
 - **Promotions Tab**: Tạo mã khuyến mãi, giảm giá, ngày bắt đầu/kết thúc
 - **7 Admin Tabs Total**: Products, Categories, Orders, Promotions, SEO, Domain, Email
+
+## Phase 10: Category CRUD Enhancement (Completed)
+- [x] Fix TypeScript errors in categories procedures (await getDb())
+- [x] Implement categories.create tRPC procedure
+- [x] Implement categories.update tRPC procedure
+- [x] Implement categories.delete tRPC procedure
+- [x] Update AdminPanel.tsx Category Management tab with Add/Edit/Delete forms
+- [x] Implement handleCreateCategory function with state updates
+- [x] Implement handleUpdateCategory function with state updates
+- [x] Implement handleDeleteCategory function with state updates
+- [x] Add integration tests for category CRUD (51/51 tests passing)
+- [x] Verify UI reflects changes immediately after create/update/delete
+- [x] TypeScript clean (0 errors)
+- [x] Dev server running

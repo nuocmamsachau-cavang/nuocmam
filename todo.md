@@ -134,3 +134,14 @@
 - [x] Mục 3: Add reordering logic and enforce 3-image limit (max 3, validation, sorting)
 - [x] Mục 4: Display SEO fields (alt/title) on product detail page (ProductDetail.tsx)
 - [x] Final testing and checkpoint (56/56 tests passing)
+
+
+## Phase 12: Fix Product Edit UI in Admin Panel (Completed)
+- [x] Add updateProduct function to server/db.ts
+- [x] Add products.update tRPC procedure
+- [x] Add Edit Product form state (showEditProductForm, editProductForm)
+- [x] Add handleEditProduct handler
+- [x] Update product list UI with separate Edit and Images buttons
+- [x] Add Edit Product form card with all fields (category, name, slug, price, description)
+- [x] TypeScript clean (0 errors)
+- [x] All tests passing (56/56)

@@ -297,3 +297,24 @@ export async function deleteProductImage(id: number) {
   if (!db) throw new Error("Database not available");
   return db.delete(productImages).where(eq(productImages.id, id));
 }
+
+export async function updateProduct(id: number, data: {
+  categoryId?: number;
+  name?: string;
+  slug?: string;
+  description?: string;
+  price?: number;
+}) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const updateData: any = {};
+  if (data.categoryId !== undefined) updateData.categoryId = data.categoryId;
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.slug !== undefined) updateData.slug = data.slug;
+  if (data.description !== undefined) updateData.description = data.description;
+  if (data.price !== undefined) updateData.price = data.price;
+  
+  await db.update(products).set(updateData).where(eq(products.id, id));
+  return getProductById(id);
+}

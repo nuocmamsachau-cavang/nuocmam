@@ -46,6 +46,15 @@ export default function AdminPanel() {
   const [editingCategory, setEditingCategory] = useState<any>(null);
   const [productImages, setProductImages] = useState<any[]>([]);
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
+  const [showEditProductForm, setShowEditProductForm] = useState(false);
+  const [editProductForm, setEditProductForm] = useState({
+    categoryId: 0,
+    name: '',
+    slug: '',
+    description: '',
+    price: '',
+  });
+
   const [newProductImages, setNewProductImages] = useState<any[]>([]);
   const [imageUploadForm, setImageUploadForm] = useState({
     imageUrl: '',
@@ -83,6 +92,7 @@ export default function AdminPanel() {
   const createProductImageMutation = trpc.productImages.upload.useMutation();
   const updateProductImageMutation = trpc.productImages.update.useMutation();
   const deleteProductImageMutation = trpc.productImages.delete.useMutation();
+  const updateProductMutation = trpc.products.update.useMutation();
   const { data: productImagesData } = trpc.productImages.getByProductId.useQuery(editingProductId || 0, {
     enabled: !!editingProductId,
   });
@@ -242,6 +252,30 @@ export default function AdminPanel() {
       console.error(error);
     }
   };
+
+  const handleEditProduct = async () => {
+    if (!editingProductId || !editProductForm.name || !editProductForm.slug) {
+      alert('Vui lòng điền đầy đủ thông tin');
+      return;
+    }
+    try {
+      await updateProductMutation.mutateAsync({
+        id: editingProductId,
+        categoryId: editProductForm.categoryId || undefined,
+        name: editProductForm.name,
+        slug: editProductForm.slug,
+        description: editProductForm.description,
+        price: editProductForm.price ? parseFloat(editProductForm.price) : undefined,
+      });
+      setProducts(products.map(p => p.id === editingProductId ? { ...p, ...editProductForm } : p));
+      setShowEditProductForm(false);
+      alert('Cập nhật sản phẩm thành công!');
+    } catch (error) {
+      alert('Lỗi khi cập nhật sản phẩm');
+      console.error(error);
+    }
+  };
+
   const handleUploadProductImage = async () => {
     if (!editingProductId || !imageUploadForm.imageUrl) {
       alert('Vui lòng điền đầy đủ thông tin');
@@ -449,13 +483,118 @@ export default function AdminPanel() {
                       <p className="text-sm text-gray-600">{product.price} VNĐ</p>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => { setEditingProductId(product.id); setProductImages([]); }}><Edit2 size={16} /> Ảnh</Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => {
+                          setEditingProductId(product.id);
+                          setEditProductForm({
+                            categoryId: product.categoryId,
+                            name: product.name,
+                            slug: product.slug,
+                            description: product.description,
+                            price: product.price.toString(),
+                          });
+                          setShowEditProductForm(true);
+                        }}
+                      >
+                        <Edit2 size={16} /> Chỉnh Sửa
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => { 
+                          setEditingProductId(product.id); 
+                          setProductImages([]); 
+                          setShowEditProductForm(false);
+                        }}
+                      >
+                        <Edit2 size={16} /> Ảnh
+                      </Button>
                       <Button variant="outline" size="sm"><Trash2 size={16} /></Button>
                     </div>
                   </div>
                 ))}
               </div>
 
+
+            {/* Edit Product Form */}
+            {showEditProductForm && editingProductId && (
+              <Card className="p-6 bg-green-50 border-2 border-green-200 mb-6">
+                <h2 style={{ color: '#C41E3A' }} className="text-2xl font-bold mb-6">Chỉnh Sửa Sản Phẩm</h2>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-bold mb-2">Danh Mục</label>
+                    <select 
+                      value={editProductForm.categoryId}
+                      onChange={(e) => setEditProductForm({ ...editProductForm, categoryId: parseInt(e.target.value) })}
+                      className="w-full p-2 border rounded"
+                    >
+                      <option value={0}>Chọn danh mục</option>
+                      {categories.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-2">Tên Sản Phẩm</label>
+                    <Input 
+                      type="text"
+                      value={editProductForm.name}
+                      onChange={(e) => setEditProductForm({ ...editProductForm, name: e.target.value })}
+                      placeholder="Tên sản phẩm"
+                      className="w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-2">Slug</label>
+                    <Input 
+                      type="text"
+                      value={editProductForm.slug}
+                      onChange={(e) => setEditProductForm({ ...editProductForm, slug: e.target.value })}
+                      placeholder="slug-san-pham"
+                      className="w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-2">Giá</label>
+                    <Input 
+                      type="number"
+                      value={editProductForm.price}
+                      onChange={(e) => setEditProductForm({ ...editProductForm, price: e.target.value })}
+                      placeholder="0"
+                      className="w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-2">Mô Tả</label>
+                    <textarea 
+                      value={editProductForm.description}
+                      onChange={(e) => setEditProductForm({ ...editProductForm, description: e.target.value })}
+                      placeholder="Mô tả sản phẩm"
+                      className="w-full p-2 border rounded"
+                      rows={4}
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      style={{ backgroundColor: '#C41E3A' }} 
+                      className="text-white"
+                      onClick={handleEditProduct}
+                    >
+                      <Save size={16} className="mr-2" />
+                      Lưu Thay Đổi
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => setShowEditProductForm(false)}
+                    >
+                      Hủy
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            )}
 
             {/* Product Images Management */}
             {editingProductId && (

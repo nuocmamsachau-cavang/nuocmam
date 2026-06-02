@@ -145,3 +145,28 @@
 - [x] Add Edit Product form card with all fields (category, name, slug, price, description)
 - [x] TypeScript clean (0 errors)
 - [x] All tests passing (56/56)
+
+
+## Phase 13: Product Delete, Create, and File Upload (Completed)
+- [x] Bước 1: Implement Product Delete Feature
+  - [x] Add deleteProduct function to server/db.ts (xóa product + images)
+  - [x] Add products.delete tRPC procedure
+  - [x] Add handleDeleteProduct handler in AdminPanel
+  - [x] Add confirm dialog before delete
+  - [x] Wire delete button to handler
+- [x] Bước 2: Implement Product Create Feature
+  - [x] Add createProduct function to server/db.ts
+  - [x] Add products.create tRPC procedure
+  - [x] Wire "Thêm Sản Phẩm Mới" form to createProductMutation
+  - [x] Add handleCreateProduct handler
+  - [x] Reset form after successful create
+  - [x] Add success message
+- [x] Bước 3: Implement Real File Upload for Product Images
+  - [x] Add file input to image upload form (replace URL text input)
+  - [x] Add file validation (accept image/*)
+  - [x] Implement file to base64 conversion
+  - [x] Update handleUploadProductImage to use FileReader
+  - [x] Display file name after selection
+  - [x] Display upload progress/loading state
+  - [x] Handle upload errors
+- [x] Final testing and checkpoint (56/56 tests passing)

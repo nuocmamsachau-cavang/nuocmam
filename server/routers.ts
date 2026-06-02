@@ -4,7 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { notifyOwner } from "./_core/notification";
 import { z } from "zod";
-import { getCategories, getCategoryById, getAllProducts, getProductById, updateProduct, getSeoMetadata, createOrder, getOrders, getAdminByUsername, getDb, getPromotions, createPromotion, getEmailConfig, saveEmailConfig, getBlogPosts, getBlogPostBySlug, createBlogPost, getAllBlogPosts, getProductReviews, getApprovedReviews, createProductReview, getAllProductReviews, approveProductReview, getProductImages, getProductImageById, createProductImage, updateProductImage, deleteProductImage } from "./db";
+import { getCategories, getCategoryById, getAllProducts, getProductById, updateProduct, deleteProduct, createProduct, getSeoMetadata, createOrder, getOrders, getAdminByUsername, getDb, getPromotions, createPromotion, getEmailConfig, saveEmailConfig, getBlogPosts, getBlogPostBySlug, createBlogPost, getAllBlogPosts, getProductReviews, getApprovedReviews, createProductReview, getAllProductReviews, approveProductReview, getProductImages, getProductImageById, createProductImage, updateProductImage, deleteProductImage } from "./db";
 import { hashPassword, verifyPassword, generateAdminToken } from "./auth";
 import { categories, products, seoMetadata, orders, adminUsers, promotions, emailConfig, blogPosts, productReviews, productImages } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
@@ -42,6 +42,17 @@ export const appRouter = router({
   products: router({
     list: publicProcedure.query(() => getAllProducts()),
     getById: publicProcedure.input(z.number()).query(({ input }) => getProductById(input)),
+    create: publicProcedure
+      .input(z.object({
+        categoryId: z.number(),
+        name: z.string(),
+        slug: z.string(),
+        description: z.string(),
+        price: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        return createProduct(input);
+      }),
     update: publicProcedure
       .input(z.object({
         id: z.number(),
@@ -54,6 +65,11 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const { id, ...data } = input;
         return updateProduct(id, data);
+      }),
+    delete: publicProcedure
+      .input(z.number())
+      .mutation(async ({ input }) => {
+        return deleteProduct(input);
       }),
   }),
 

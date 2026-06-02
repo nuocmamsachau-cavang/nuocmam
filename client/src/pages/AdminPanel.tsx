@@ -56,7 +56,8 @@ export default function AdminPanel() {
   });
 
   const [newProductImages, setNewProductImages] = useState<any[]>([]);
-  const [imageUploadForm, setImageUploadForm] = useState({
+  const [imageUploadFile, setImageUploadFile] = useState<File | null>(null);
+    const [imageUploadForm, setImageUploadForm] = useState({
     imageUrl: '',
     displayOrder: 1,
     altText: '',
@@ -89,7 +90,9 @@ export default function AdminPanel() {
   const { data: promotionsData } = trpc.promotions.list.useQuery(undefined, {
     enabled: adminState.isAuthenticated,
   })
-  const createProductImageMutation = trpc.productImages.upload.useMutation();
+  const createProductMutation = trpc.products.create.useMutation();
+  const deleteProductMutation = trpc.products.delete.useMutation();
+    const createProductImageMutation = trpc.productImages.upload.useMutation();
   const updateProductImageMutation = trpc.productImages.update.useMutation();
   const deleteProductImageMutation = trpc.productImages.delete.useMutation();
   const updateProductMutation = trpc.products.update.useMutation();
@@ -253,6 +256,50 @@ export default function AdminPanel() {
     }
   };
 
+
+  const handleCreateProduct = async () => {
+    if (!newProduct.categoryId || !newProduct.name || !newProduct.slug || !newProduct.price) {
+      alert('Vui lòng điền đầy đủ thông tin');
+      return;
+    }
+    try {
+      const result = await createProductMutation.mutateAsync({
+        categoryId: newProduct.categoryId,
+        name: newProduct.name,
+        slug: newProduct.slug,
+        description: newProduct.description,
+        price: parseFloat(newProduct.price),
+      });
+      setProducts([...products, result]);
+      setNewProduct({
+        categoryId: 0,
+        name: '',
+        slug: '',
+        description: '',
+        price: '',
+        imageUrl: '',
+      });
+      alert('Tạo sản phẩm thành công!');
+    } catch (error) {
+      alert('Lỗi khi tạo sản phẩm');
+      console.error(error);
+    }
+  };
+
+  const handleDeleteProduct = async (productId: number) => {
+    if (!confirm('Bạn chắc chắn muốn xóa sản phẩm này? Tất cả ảnh sẽ bị xóa.')) {
+      return;
+    }
+    try {
+      await deleteProductMutation.mutateAsync(productId);
+      setProducts(products.filter(p => p.id !== productId));
+      alert('Xóa sản phẩm thành công!');
+    } catch (error) {
+      alert('Lỗi khi xóa sản phẩm');
+      console.error(error);
+    }
+  };
+
   const handleEditProduct = async () => {
     if (!editingProductId || !editProductForm.name || !editProductForm.slug) {
       alert('Vui lòng điền đầy đủ thông tin');
@@ -277,28 +324,54 @@ export default function AdminPanel() {
   };
 
   const handleUploadProductImage = async () => {
-    if (!editingProductId || !imageUploadForm.imageUrl) {
-      alert('Vui lòng điền đầy đủ thông tin');
-      return;
-    }
-    if (imageUploadForm.displayOrder < 1 || imageUploadForm.displayOrder > 3) {
-      alert('Thứ tự ảnh phải từ 1 đến 3');
+    if (!editingProductId || !imageUploadFile) {
+      alert('Vui lòng chọn file ảnh');
       return;
     }
     
-    setImageUploadLoading(true);
+    if (productImages.length >= 3) {
+      alert('Đã đạt tối đa 3 ảnh');
+      return;
+    }
+    
+    if (imageUploadForm.displayOrder < 1 || imageUploadForm.displayOrder > 3) {
+      alert('Thứ tự phải từ 1 đến 3');
+      return;
+    }
+    
     try {
-      await createProductImageMutation.mutateAsync({
-        productId: editingProductId,
-        imageUrl: imageUploadForm.imageUrl,
-        imageKey: `product-${editingProductId}-${imageUploadForm.displayOrder}`,
-        displayOrder: imageUploadForm.displayOrder,
-        altText: imageUploadForm.altText || '',
-      });
-      setImageUploadForm({ imageUrl: '', displayOrder: 1, altText: '' });
-      alert('Upload ảnh thành công!');
-    } catch (error: any) {
-      alert(error?.message || 'Lỗi khi upload ảnh');
+      setImageUploadLoading(true);
+      
+      // Convert file to base64
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64 = e.target?.result as string;
+        
+        await createProductImageMutation.mutateAsync({
+          productId: editingProductId,
+          imageUrl: base64,
+          imageKey: `product-${editingProductId}-${Date.now()}`,
+          displayOrder: imageUploadForm.displayOrder,
+          altText: imageUploadForm.altText,
+        });
+        
+        setProductImages([...productImages, {
+          id: Date.now(),
+          productId: editingProductId,
+          imageUrl: base64,
+          displayOrder: imageUploadForm.displayOrder,
+          altText: imageUploadForm.altText,
+          imageKey: '',
+          createdAt: new Date(),
+        }]);
+        
+        setImageUploadForm({ imageUrl: '', displayOrder: 1, altText: '' });
+        setImageUploadFile(null);
+        alert('Upload ảnh thành công!');
+      };
+      reader.readAsDataURL(imageUploadFile);
+    } catch (error) {
+      alert('Lỗi khi upload ảnh');
       console.error(error);
     } finally {
       setImageUploadLoading(false);
@@ -511,7 +584,13 @@ export default function AdminPanel() {
                       >
                         <Edit2 size={16} /> Ảnh
                       </Button>
-                      <Button variant="outline" size="sm"><Trash2 size={16} /></Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleDeleteProduct(product.id)}
+                      >
+                        <Trash2 size={16} />
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -611,15 +690,17 @@ export default function AdminPanel() {
                     )}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-bold mb-2">URL Ảnh</label>
-                        <Input 
-                          type="text"
-                          placeholder="https://example.com/image.jpg"
-                          value={imageUploadForm.imageUrl}
-                          onChange={(e) => setImageUploadForm({ ...imageUploadForm, imageUrl: e.target.value })}
-                          className="w-full"
+                        <label className="block text-sm font-bold mb-2">Chọn Ảnh</label>
+                        <input 
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => setImageUploadFile(e.target.files?.[0] || null)}
+                          className="w-full p-2 border rounded"
                           disabled={productImages.length >= 3}
                         />
+                        {imageUploadFile && (
+                          <p className="text-sm text-green-600 mt-2">✓ {imageUploadFile.name}</p>
+                        )}
                       </div>
                       <div>
                         <label className="block text-sm font-bold mb-2">Thứ Tự (1, 2, 3)</label>

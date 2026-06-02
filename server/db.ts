@@ -318,3 +318,41 @@ export async function updateProduct(id: number, data: {
   await db.update(products).set(updateData).where(eq(products.id, id));
   return getProductById(id);
 }
+
+export async function deleteProduct(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  // Delete product images first
+  await db.delete(productImages).where(eq(productImages.productId, id));
+  
+  // Delete product
+  await db.delete(products).where(eq(products.id, id));
+  
+  return { success: true };
+}
+
+export async function createProduct(data: {
+  categoryId: number;
+  name: string;
+  slug: string;
+  description: string;
+  price: number | string;
+}) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const priceValue = typeof data.price === 'string' ? parseFloat(data.price) : data.price;
+  
+  await db.insert(products).values({
+    categoryId: data.categoryId,
+    name: data.name,
+    slug: data.slug,
+    description: data.description,
+    price: priceValue as any,
+  });
+  
+  // Get the newly created product by slug
+  const result = await db.select().from(products).where(eq(products.slug, data.slug)).limit(1);
+  return result.length > 0 ? result[0] : null;
+}

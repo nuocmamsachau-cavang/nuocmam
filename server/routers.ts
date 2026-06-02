@@ -4,9 +4,9 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { notifyOwner } from "./_core/notification";
 import { z } from "zod";
-import { getCategories, getCategoryById, getAllProducts, getProductById, getSeoMetadata, createOrder, getOrders, getAdminByUsername, getDb, getPromotions, createPromotion, getEmailConfig, saveEmailConfig, getBlogPosts, getBlogPostBySlug, createBlogPost, getAllBlogPosts, getProductReviews, getApprovedReviews, createProductReview, getAllProductReviews, approveProductReview } from "./db";
+import { getCategories, getCategoryById, getAllProducts, getProductById, getSeoMetadata, createOrder, getOrders, getAdminByUsername, getDb, getPromotions, createPromotion, getEmailConfig, saveEmailConfig, getBlogPosts, getBlogPostBySlug, createBlogPost, getAllBlogPosts, getProductReviews, getApprovedReviews, createProductReview, getAllProductReviews, approveProductReview, getProductImages, getProductImageById, createProductImage, updateProductImage, deleteProductImage } from "./db";
 import { hashPassword, verifyPassword, generateAdminToken } from "./auth";
-import { categories, products, seoMetadata, orders, adminUsers, promotions, emailConfig, blogPosts, productReviews } from "../drizzle/schema";
+import { categories, products, seoMetadata, orders, adminUsers, promotions, emailConfig, blogPosts, productReviews, productImages } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
@@ -285,6 +285,43 @@ export const appRouter = router({
     getAll: publicProcedure.query(() => getAllProductReviews()),
     approve: publicProcedure.input(z.number()).mutation(({ input }) => approveProductReview(input)),
   }),
-});
+
+  // Product Images
+  productImages: router({
+    getByProductId: publicProcedure.input(z.number()).query(({ input }) => getProductImages(input)),
+    getById: publicProcedure.input(z.number()).query(({ input }) => getProductImageById(input)),
+    upload: publicProcedure
+      .input(z.object({
+        productId: z.number(),
+        imageUrl: z.string(),
+        imageKey: z.string(),
+        displayOrder: z.number().default(1),
+        altText: z.string().optional(),
+        title: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await createProductImage(input);
+        const images = await getProductImages(input.productId);
+        return images[images.length - 1] || { ...input, id: 0 };
+      }),
+    update: publicProcedure
+      .input(z.object({
+        id: z.number(),
+        displayOrder: z.number().optional(),
+        altText: z.string().optional(),
+        title: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...updateData } = input;
+        await updateProductImage(id, updateData);
+        return getProductImageById(id);
+      }),
+    delete: publicProcedure
+      .input(z.number())
+      .mutation(async ({ input }) => {
+        await deleteProductImage(input);
+        return { success: true };
+      }),
+  }),});
 
 export type AppRouter = typeof appRouter;

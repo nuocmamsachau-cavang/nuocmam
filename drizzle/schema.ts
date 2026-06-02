@@ -182,3 +182,19 @@ export const productReviews = mysqlTable("productReviews", {
 
 export type ProductReview = typeof productReviews.$inferSelect;
 export type InsertProductReview = typeof productReviews.$inferInsert;
+
+// Product Images (3 images per product for SEO optimization)
+export const productImages = mysqlTable("productImages", {
+  id: int("id").autoincrement().primaryKey(),
+  productId: int("productId").notNull(),
+  imageUrl: varchar("imageUrl", { length: 512 }).notNull(),
+  imageKey: varchar("imageKey", { length: 512 }).notNull(),
+  displayOrder: int("displayOrder").notNull().default(1),
+  altText: varchar("altText", { length: 255 }),
+  title: varchar("title", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ProductImage = typeof productImages.$inferSelect;
+export type InsertProductImage = typeof productImages.$inferInsert;

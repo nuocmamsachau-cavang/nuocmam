@@ -29,6 +29,13 @@
       "when": 1778121137340,
       "tag": "0003_colorful_makkari",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1780360641001,
+      "tag": "0004_mighty_zodiak",
+      "breakpoints": true
     }
   ]
 }

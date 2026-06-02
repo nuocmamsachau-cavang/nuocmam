@@ -1,6 +1,6 @@
 import { eq, desc, asc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, categories, products, seoMetadata, orders, adminUsers, promotions, emailConfig, blogPosts, productReviews } from "../drizzle/schema";
+import { InsertUser, users, categories, products, seoMetadata, orders, adminUsers, promotions, emailConfig, blogPosts, productReviews, productImages, ProductImage } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -261,4 +261,39 @@ export async function approveProductReview(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return db.update(productReviews).set({ isApproved: true }).where(eq(productReviews.id, id));
+}
+
+// Product Images Queries
+export async function getProductImages(productId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(productImages)
+    .where(eq(productImages.productId, productId))
+    .orderBy(asc(productImages.displayOrder));
+}
+
+export async function getProductImageById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(productImages).where(eq(productImages.id, id)).limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function createProductImage(image: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(productImages).values(image);
+  return result;
+}
+
+export async function updateProductImage(id: number, image: Partial<ProductImage>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(productImages).set(image).where(eq(productImages.id, id));
+}
+
+export async function deleteProductImage(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.delete(productImages).where(eq(productImages.id, id));
 }

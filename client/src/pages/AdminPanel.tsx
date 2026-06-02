@@ -44,13 +44,17 @@ export default function AdminPanel() {
   const [sslLoading, setSslLoading] = useState(false);
   const [sslMessage, setSslMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [productImages, setProductImages] = useState<any[]>([]);
+  const [editingProductId, setEditingProductId] = useState<number | null>(null);
+  const [newProductImages, setNewProductImages] = useState<any[]>([]);
+  const [showNewCategoryForm, setShowNewCategoryForm] = useState(false);
+
   const [newCategory, setNewCategory] = useState({
     name: '',
     slug: '',
     description: '',
     displayOrder: '',
   });
-  const [showNewCategoryForm, setShowNewCategoryForm] = useState(false);
 
   const loginMutation = trpc.admin.login.useMutation();
   const sslMutation = trpc.domain.activateSSL.useMutation();
@@ -367,13 +371,82 @@ export default function AdminPanel() {
                       <p className="text-sm text-gray-600">{product.price} VNĐ</p>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm"><Edit2 size={16} /></Button>
+                      <Button variant="outline" size="sm" onClick={() => { setEditingProductId(product.id); setProductImages([]); }}><Edit2 size={16} /> Ảnh</Button>
                       <Button variant="outline" size="sm"><Trash2 size={16} /></Button>
                     </div>
                   </div>
                 ))}
               </div>
-            </Card>
+
+
+            {/* Product Images Management */}
+            {editingProductId && (
+              <Card className="p-6 bg-blue-50 border-2 border-blue-200">
+                <h2 style={{ color: '#C41E3A' }} className="text-2xl font-bold mb-6">Quản Lý Ảnh Sản Phẩm (Tối Đa 3 Ảnh)</h2>
+                <div className="space-y-4">
+                  {/* Image Upload Form */}
+                  <div className="bg-white p-4 rounded border">
+                    <h3 className="font-bold mb-4">Upload Ảnh Sản Phẩm</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-bold mb-2">URL Ảnh</label>
+                        <Input 
+                          type="text"
+                          placeholder="https://example.com/image.jpg"
+                          className="w-full"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold mb-2">Thứ Tự (1, 2, 3)</label>
+                        <Input 
+                          type="number"
+                          min="1"
+                          max="3"
+                          placeholder="1"
+                          className="w-full"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-bold mb-2">Alt Text (SEO)</label>
+                        <Input 
+                          type="text"
+                          placeholder="Mô tả ảnh cho SEO"
+                          className="w-full"
+                        />
+                      </div>
+                    </div>
+                    <Button style={{ backgroundColor: '#C41E3A' }} className="text-white mt-4">
+                      <Plus size={16} className="mr-2" /> Upload Ảnh
+                    </Button>
+                  </div>
+
+                  {/* Images List */}
+                  <div className="bg-white p-4 rounded border">
+                    <h3 className="font-bold mb-4">Ảnh Hiện Tại</h3>
+                    <div className="space-y-3">
+                      {productImages.length > 0 ? (
+                        productImages.map((img, idx) => (
+                          <div key={img.id} className="flex items-center gap-4 p-3 bg-gray-50 rounded border">
+                            <div className="w-20 h-20 bg-gray-200 rounded flex items-center justify-center">
+                              <img src={img.imageUrl} alt={img.altText} className="w-full h-full object-cover rounded" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-bold">Ảnh #{img.displayOrder}</p>
+                              <p className="text-xs text-gray-600">{img.altText || 'Không có mô tả'}</p>
+                            </div>
+                            <Button variant="outline" size="sm"><Edit2 size={16} /></Button>
+                            <Button variant="outline" size="sm" className="text-red-600"><Trash2 size={16} /></Button>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-gray-500 text-sm">Chưa có ảnh nào. Hãy upload ảnh sản phẩm.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <Button variant="outline" className="mt-4" onClick={() => setEditingProductId(null)}>Đóng</Button>
+              </Card>
+            )}            </Card>
           </TabsContent>
 
           {/* Categories Tab */}

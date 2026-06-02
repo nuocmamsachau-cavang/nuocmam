@@ -23,6 +23,10 @@ export default function Home() {
 
   const { data: products = [] } = trpc.products.list.useQuery();
   const { data: categories = [] } = trpc.categories.list.useQuery();
+  const { data: productImagesMap = {} as Record<number, any> } = trpc.productImages.getByProductId.useQuery(0, {
+    enabled: false,
+  });
+
   const createOrderMutation = trpc.orders.create.useMutation();
 
   const addToCart = (product: any) => {
@@ -161,7 +165,17 @@ export default function Home() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {groupedProducts[category.id]?.map((product: any) => (
                     <Card key={product.id} className="p-4 hover:shadow-lg transition">
-                      <div className="text-4xl mb-3 text-center">🍶</div>
+                      <div className="relative w-full h-40 bg-gray-200 rounded mb-3 overflow-hidden">
+                        {productImagesMap[product.id]?.length > 0 ? (
+                          <img 
+                            src={productImagesMap[product.id][0].imageUrl} 
+                            alt={productImagesMap[product.id][0].altText || product.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-4xl">🍶</div>
+                        )}
+                      </div>
                       <h4 style={{ color: '#C41E3A' }} className="font-bold mb-2">{product.name}</h4>
                       <p className="text-sm text-gray-600 mb-3">{product.description}</p>
                       <div style={{ color: '#C41E3A' }} className="text-xl font-bold mb-4">
@@ -196,7 +210,17 @@ export default function Home() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {groupedProducts[category.id]?.map((product: any) => (
                     <Card key={product.id} className="p-4 hover:shadow-lg transition">
-                      <div className="text-4xl mb-3 text-center">🍶</div>
+                      <div className="relative w-full h-40 bg-gray-200 rounded mb-3 overflow-hidden">
+                        {productImagesMap[product.id]?.length > 0 ? (
+                          <img 
+                            src={productImagesMap[product.id][0].imageUrl} 
+                            alt={productImagesMap[product.id][0].altText || product.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-4xl">🍶</div>
+                        )}
+                      </div>
                       <h4 style={{ color: '#C41E3A' }} className="font-bold mb-2">{product.name}</h4>
                       <p className="text-sm text-gray-600 mb-3">{product.description}</p>
                       <div style={{ color: '#C41E3A' }} className="text-xl font-bold mb-4">

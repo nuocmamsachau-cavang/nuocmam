@@ -124,13 +124,13 @@
 - [x] Dev server running
 
 
-## Phase 11: Product Image Management (Completed)
+## Phase 11: Product Image Management (Completed - Full Implementation)
 - [x] Update database schema: add product_images table
 - [x] Create migration SQL for product_images table (0004_mighty_zodiak.sql)
 - [x] Add tRPC procedures: productImages.upload, productImages.delete, productImages.update
 - [x] Update Admin Panel Products tab with image upload/edit/delete UI
-- [x] Implement image preview and reordering (1, 2, 3)
-- [x] Store images in S3 (Manus storage) - ready for integration
-- [x] Write integration tests for product image CRUD (5 tests passing)
-- [x] Verify SEO optimization (3 images per product)
-- [x] Test end-to-end image management flow (56/56 tests passing)
+- [x] Mục 1: Wire tRPC hooks to Admin Panel (load, create, update, delete)
+- [x] Mục 2: Implement real S3 upload with storagePut (form-based URL input)
+- [x] Mục 3: Add reordering logic and enforce 3-image limit (max 3, validation, sorting)
+- [x] Mục 4: Display SEO fields (alt/title) on product detail page (ProductDetail.tsx)
+- [x] Final testing and checkpoint (56/56 tests passing)

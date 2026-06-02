@@ -47,6 +47,13 @@ export default function AdminPanel() {
   const [productImages, setProductImages] = useState<any[]>([]);
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
   const [newProductImages, setNewProductImages] = useState<any[]>([]);
+  const [imageUploadForm, setImageUploadForm] = useState({
+    imageUrl: '',
+    displayOrder: 1,
+    altText: '',
+  });
+  const [imageUploadLoading, setImageUploadLoading] = useState(false);
+
   const [showNewCategoryForm, setShowNewCategoryForm] = useState(false);
 
   const [newCategory, setNewCategory] = useState({
@@ -72,12 +79,25 @@ export default function AdminPanel() {
   });
   const { data: promotionsData } = trpc.promotions.list.useQuery(undefined, {
     enabled: adminState.isAuthenticated,
+  })
+  const createProductImageMutation = trpc.productImages.upload.useMutation();
+  const updateProductImageMutation = trpc.productImages.update.useMutation();
+  const deleteProductImageMutation = trpc.productImages.delete.useMutation();
+  const { data: productImagesData } = trpc.productImages.getByProductId.useQuery(editingProductId || 0, {
+    enabled: !!editingProductId,
   });
+
+;
   const createPromotionMutation = trpc.promotions.create.useMutation();
 
   useEffect(() => {
     if (productsData) setProducts(productsData);
-  }, [productsData]);
+  }, [productsData])
+  useEffect(() => {
+    if (productImagesData) setProductImages(productImagesData);
+  }, [productImagesData]);
+
+;
 
   useEffect(() => {
     if (categoriesData) setCategories(categoriesData);
@@ -222,6 +242,64 @@ export default function AdminPanel() {
       console.error(error);
     }
   };
+  const handleUploadProductImage = async () => {
+    if (!editingProductId || !imageUploadForm.imageUrl) {
+      alert('Vui lòng điền đầy đủ thông tin');
+      return;
+    }
+    if (imageUploadForm.displayOrder < 1 || imageUploadForm.displayOrder > 3) {
+      alert('Thứ tự ảnh phải từ 1 đến 3');
+      return;
+    }
+    
+    setImageUploadLoading(true);
+    try {
+      await createProductImageMutation.mutateAsync({
+        productId: editingProductId,
+        imageUrl: imageUploadForm.imageUrl,
+        imageKey: `product-${editingProductId}-${imageUploadForm.displayOrder}`,
+        displayOrder: imageUploadForm.displayOrder,
+        altText: imageUploadForm.altText || '',
+      });
+      setImageUploadForm({ imageUrl: '', displayOrder: 1, altText: '' });
+      alert('Upload ảnh thành công!');
+    } catch (error: any) {
+      alert(error?.message || 'Lỗi khi upload ảnh');
+      console.error(error);
+    } finally {
+      setImageUploadLoading(false);
+    }
+  };
+
+  const handleDeleteProductImage = async (imageId: number) => {
+    if (!confirm('Bạn chắc chắn muốn xóa ảnh này?')) return;
+    try {
+      await deleteProductImageMutation.mutateAsync(imageId);
+      setProductImages(productImages.filter(img => img.id !== imageId));
+      alert('Xóa ảnh thành công!');
+    } catch (error) {
+      alert('Lỗi khi xóa ảnh');
+      console.error(error);
+    }
+  };
+
+  const handleUpdateProductImage = async (imageId: number, displayOrder: number, altText: string) => {
+    try {
+      await updateProductImageMutation.mutateAsync({
+        id: imageId,
+        displayOrder,
+        altText,
+      });
+      setProductImages(productImages.map(img => 
+        img.id === imageId ? { ...img, displayOrder, altText } : img
+      ));
+      alert('Cập nhật ảnh thành công!');
+    } catch (error) {
+      alert('Lỗi khi cập nhật ảnh');
+      console.error(error);
+    }
+  };
+
 
   if (!adminState.isAuthenticated) {
     return (
@@ -386,14 +464,22 @@ export default function AdminPanel() {
                 <div className="space-y-4">
                   {/* Image Upload Form */}
                   <div className="bg-white p-4 rounded border">
-                    <h3 className="font-bold mb-4">Upload Ảnh Sản Phẩm</h3>
+                    <h3 className="font-bold mb-4">Upload Ảnh Sản Phẩm ({productImages.length}/3)</h3>
+                    {productImages.length >= 3 && (
+                      <div className="bg-red-50 border border-red-200 p-3 rounded mb-4 text-sm text-red-700">
+                        ⚠️ Đã đạt tối đa 3 ảnh. Xóa ảnh cũ để thêm ảnh mới.
+                      </div>
+                    )}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-bold mb-2">URL Ảnh</label>
                         <Input 
                           type="text"
                           placeholder="https://example.com/image.jpg"
+                          value={imageUploadForm.imageUrl}
+                          onChange={(e) => setImageUploadForm({ ...imageUploadForm, imageUrl: e.target.value })}
                           className="w-full"
+                          disabled={productImages.length >= 3}
                         />
                       </div>
                       <div>
@@ -402,8 +488,10 @@ export default function AdminPanel() {
                           type="number"
                           min="1"
                           max="3"
-                          placeholder="1"
+                          value={imageUploadForm.displayOrder}
+                          onChange={(e) => setImageUploadForm({ ...imageUploadForm, displayOrder: parseInt(e.target.value) })}
                           className="w-full"
+                          disabled={productImages.length >= 3}
                         />
                       </div>
                       <div className="md:col-span-2">
@@ -411,31 +499,61 @@ export default function AdminPanel() {
                         <Input 
                           type="text"
                           placeholder="Mô tả ảnh cho SEO"
+                          value={imageUploadForm.altText}
+                          onChange={(e) => setImageUploadForm({ ...imageUploadForm, altText: e.target.value })}
                           className="w-full"
+                          disabled={productImages.length >= 3}
                         />
                       </div>
                     </div>
-                    <Button style={{ backgroundColor: '#C41E3A' }} className="text-white mt-4">
-                      <Plus size={16} className="mr-2" /> Upload Ảnh
+                    <Button 
+                      style={{ backgroundColor: '#C41E3A' }} 
+                      className="text-white mt-4"
+                      onClick={handleUploadProductImage}
+                      disabled={productImages.length >= 3 || imageUploadLoading}
+                    >
+                      {imageUploadLoading ? <Loader size={16} className="mr-2 animate-spin" /> : <Plus size={16} className="mr-2" />}
+                      {imageUploadLoading ? 'Đang upload...' : 'Upload Ảnh'}
                     </Button>
                   </div>
 
                   {/* Images List */}
                   <div className="bg-white p-4 rounded border">
-                    <h3 className="font-bold mb-4">Ảnh Hiện Tại</h3>
+                    <h3 className="font-bold mb-4">Ảnh Hiện Tại ({productImages.length}/3)</h3>
                     <div className="space-y-3">
                       {productImages.length > 0 ? (
-                        productImages.map((img, idx) => (
+                        productImages.sort((a, b) => a.displayOrder - b.displayOrder).map((img) => (
                           <div key={img.id} className="flex items-center gap-4 p-3 bg-gray-50 rounded border">
-                            <div className="w-20 h-20 bg-gray-200 rounded flex items-center justify-center">
-                              <img src={img.imageUrl} alt={img.altText} className="w-full h-full object-cover rounded" />
+                            <div className="w-20 h-20 bg-gray-200 rounded flex items-center justify-center overflow-hidden">
+                              <img src={img.imageUrl} alt={img.altText} className="w-full h-full object-cover" />
                             </div>
                             <div className="flex-1">
                               <p className="text-sm font-bold">Ảnh #{img.displayOrder}</p>
                               <p className="text-xs text-gray-600">{img.altText || 'Không có mô tả'}</p>
+                              <p className="text-xs text-gray-500 mt-1">Key: {img.imageKey}</p>
                             </div>
-                            <Button variant="outline" size="sm"><Edit2 size={16} /></Button>
-                            <Button variant="outline" size="sm" className="text-red-600"><Trash2 size={16} /></Button>
+                            <div className="flex gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => {
+                                  const newOrder = prompt('Nhập thứ tự mới (1-3):', img.displayOrder.toString());
+                                  if (newOrder && parseInt(newOrder) >= 1 && parseInt(newOrder) <= 3) {
+                                    handleUpdateProductImage(img.id, parseInt(newOrder), img.altText);
+                                  }
+                                }}
+                              >
+                                <Edit2 size={16} />
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="text-red-600"
+                                onClick={() => handleDeleteProductImage(img.id)}
+                              >
+                                <Trash2 size={16} />
+                              </Button>
+                            </div>
                           </div>
                         ))
                       ) : (

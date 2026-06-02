@@ -9,6 +9,7 @@ import About from "./pages/About";
 import AdminPanel from "./pages/AdminPanel";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import DomainManagement from "./pages/DomainManagement";
+import ProductDetail from "./pages/ProductDetail";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -16,6 +17,7 @@ function Router() {
     <Switch>
       <Route path={"/"} component={Home} />
       <Route path={"/about"} component={About} />
+      <Route path={"/product/:id"} component={ProductDetail} />
       <Route path={"/admin"} component={AdminPanel} />
       <Route path={"/order-confirmation"} component={OrderConfirmation} />
       <Route path={"/admin/domain"} component={DomainManagement} />

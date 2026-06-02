@@ -300,6 +300,12 @@ export const appRouter = router({
         title: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
+        // Validate max 3 images per product
+        const existingImages = await getProductImages(input.productId);
+        if (existingImages.length >= 3) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Maximum 3 images per product' });
+        }
+        
         await createProductImage(input);
         const images = await getProductImages(input.productId);
         return images[images.length - 1] || { ...input, id: 0 };

@@ -3,6 +3,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { notifyOwner } from "./_core/notification";
+import { storagePut } from "./storage";
 import { z } from "zod";
 import { getCategories, getCategoryById, getAllProducts, getProductById, updateProduct, deleteProduct, createProduct, getSeoMetadata, createOrder, getOrders, getAdminByUsername, getDb, getPromotions, createPromotion, getEmailConfig, saveEmailConfig, getBlogPosts, getBlogPostBySlug, createBlogPost, getAllBlogPosts, getProductReviews, getApprovedReviews, createProductReview, getAllProductReviews, approveProductReview, getProductImages, getProductImageById, createProductImage, updateProductImage, deleteProductImage } from "./db";
 import { hashPassword, verifyPassword, generateAdminToken } from "./auth";
@@ -322,22 +323,58 @@ export const appRouter = router({
     upload: publicProcedure
       .input(z.object({
         productId: z.number(),
-        imageUrl: z.string(),
-        imageKey: z.string(),
+        imageData: z.string(), // base64 or URL
         displayOrder: z.number().default(1),
         altText: z.string().optional(),
         title: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
-        // Validate max 3 images per product
-        const existingImages = await getProductImages(input.productId);
-        if (existingImages.length >= 3) {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Maximum 3 images per product' });
+        try {
+          // Validate max 3 images per product
+          const existingImages = await getProductImages(input.productId);
+          if (existingImages.length >= 3) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: 'Maximum 3 images per product' });
+          }
+
+          // Convert base64 to buffer if needed
+          let imageBuffer: Buffer;
+          if (input.imageData.startsWith('data:image')) {
+            const base64Data = input.imageData.split(',')[1];
+            imageBuffer = Buffer.from(base64Data, 'base64');
+          } else if (input.imageData.startsWith('http')) {
+            // If it's a URL, fetch and convert
+            const response = await fetch(input.imageData);
+            imageBuffer = Buffer.from(await response.arrayBuffer());
+          } else {
+            imageBuffer = Buffer.from(input.imageData, 'base64');
+          }
+
+          // Upload to S3
+          const { key, url } = await storagePut(
+            `products/${input.productId}/image-${Date.now()}.jpg`,
+            imageBuffer,
+            'image/jpeg'
+          );
+
+          // Save to database
+          await createProductImage({
+            productId: input.productId,
+            imageUrl: url,
+            imageKey: key,
+            displayOrder: input.displayOrder,
+            altText: input.altText,
+            title: input.title,
+          });
+          
+          const images = await getProductImages(input.productId);
+          return images[images.length - 1] || { productId: input.productId, imageUrl: url, imageKey: key, displayOrder: input.displayOrder, altText: input.altText, title: input.title, id: 0, createdAt: new Date() };
+        } catch (error) {
+          console.error('Image upload error:', error);
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Failed to upload image to storage',
+          });
         }
-        
-        await createProductImage(input);
-        const images = await getProductImages(input.productId);
-        return images[images.length - 1] || { ...input, id: 0 };
       }),
     update: publicProcedure
       .input(z.object({
@@ -357,6 +394,10 @@ export const appRouter = router({
         await deleteProductImage(input);
         return { success: true };
       }),
-  }),});
+  }),
+
+
+});
 
 export type AppRouter = typeof appRouter;
+

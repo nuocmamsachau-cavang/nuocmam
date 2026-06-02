@@ -170,3 +170,26 @@
   - [x] Display upload progress/loading state
   - [x] Handle upload errors
 - [x] Final testing and checkpoint (56/56 tests passing)
+
+
+## Phase 14: S3 Storage, Drag-Drop Reorder, and SEO Meta Tags (Completed)
+- [ ] Bước 1: Integrate Manus S3 Storage for Product Images
+  - [ ] Update productImages.upload procedure to use storagePut
+  - [ ] Convert base64 to file buffer for S3 upload
+  - [ ] Save S3 URL to imageUrl field
+  - [ ] Save S3 key to imageKey field
+  - [ ] Update handleUploadProductImage to use S3 storage
+- [ ] Bước 2: Implement Drag-Drop Reorder for Product Images
+  - [ ] Add react-beautiful-dnd or similar library
+  - [ ] Implement drag-drop UI for product images list
+  - [ ] Update displayOrder on drop
+  - [ ] Call productImages.update with new order
+  - [ ] Visual feedback during drag
+- [ ] Bước 3: Implement SEO Meta Tags Management
+  - [ ] Create seoMetadata table (if not exists)
+  - [ ] Add tRPC procedures: seo.create, seo.update, seo.getByPageId
+  - [ ] Add SEO form in Admin Panel (title, description, keywords, ogImage)
+  - [ ] Wire SEO form to mutations
+  - [ ] Display SEO fields on product detail page
+  - [ ] Add meta tags to HTML head
+- [ ] Final testing and checkpoint

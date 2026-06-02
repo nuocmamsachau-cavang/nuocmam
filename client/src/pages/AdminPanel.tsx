@@ -347,23 +347,14 @@ export default function AdminPanel() {
       reader.onload = async (e) => {
         const base64 = e.target?.result as string;
         
-        await createProductImageMutation.mutateAsync({
+        const result = await createProductImageMutation.mutateAsync({
           productId: editingProductId,
-          imageUrl: base64,
-          imageKey: `product-${editingProductId}-${Date.now()}`,
+          imageData: base64,
           displayOrder: imageUploadForm.displayOrder,
           altText: imageUploadForm.altText,
         });
         
-        setProductImages([...productImages, {
-          id: Date.now(),
-          productId: editingProductId,
-          imageUrl: base64,
-          displayOrder: imageUploadForm.displayOrder,
-          altText: imageUploadForm.altText,
-          imageKey: '',
-          createdAt: new Date(),
-        }]);
+        setProductImages([...productImages, result]);
         
         setImageUploadForm({ imageUrl: '', displayOrder: 1, altText: '' });
         setImageUploadFile(null);

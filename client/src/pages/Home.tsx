@@ -20,6 +20,24 @@ export default function Home() {
     email: '',
     address: '',
   });
+  const [promotions, setPromotions] = useState([
+    {
+      id: 1,
+      title: 'Khuyến Mãi Đặc Biệt',
+      description: 'Giảm 20% cho đơn hàng từ 500.000₫',
+      discount: '20%',
+      backgroundColor: '#C41E3A',
+      textColor: '#D4AF37',
+    },
+    {
+      id: 2,
+      title: 'Mua 2 Tặng 1',
+      description: 'Mua 2 chai nước mắm, tặng 1 chai cùng loại',
+      discount: 'Tặng 1',
+      backgroundColor: '#8B1428',
+      textColor: '#D4AF37',
+    },
+  ]);
 
   const { data: products = [] } = trpc.products.list.useQuery();
   const { data: categories = [] } = trpc.categories.list.useQuery();
@@ -129,6 +147,43 @@ export default function Home() {
         >
           🛍️ Khám Phá Sản Phẩm
         </Button>
+      </section>
+
+      {/* Promotion Section */}
+      <section className="py-12 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {promotions.map((promo) => (
+              <div
+                key={promo.id}
+                style={{ backgroundColor: promo.backgroundColor }}
+                className="rounded-lg p-8 text-white shadow-lg hover:shadow-xl transition transform hover:scale-105"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 style={{ color: promo.textColor }} className="text-2xl font-bold mb-2">
+                      {promo.title}
+                    </h3>
+                    <p className="text-white mb-4">{promo.description}</p>
+                    <Button
+                      onClick={() => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })}
+                      style={{ backgroundColor: promo.textColor, color: promo.backgroundColor }}
+                      className="font-bold"
+                    >
+                      Mua Ngay
+                    </Button>
+                  </div>
+                  <div
+                    style={{ color: promo.textColor }}
+                    className="text-5xl font-bold"
+                  >
+                    {promo.discount}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* About Brief */}

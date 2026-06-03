@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -41,9 +41,35 @@ export default function Home() {
 
   const { data: products = [] } = trpc.products.list.useQuery();
   const { data: categories = [] } = trpc.categories.list.useQuery();
-  const { data: productImagesMap = {} as Record<number, any> } = trpc.productImages.getByProductId.useQuery(0, {
-    enabled: false,
-  });
+  const [productImagesMap, setProductImagesMap] = useState<Record<number, any>>({});
+
+  // Load images for all products
+  useEffect(() => {
+    const loadImages = async () => {
+      const newImagesMap: Record<number, any> = {};
+      
+      for (const product of products) {
+        try {
+          // Use fetch to call the tRPC endpoint
+          const response = await fetch(`/api/trpc/productImages.getByProductId?input=${encodeURIComponent(JSON.stringify(product.id))}`);
+          if (response.ok) {
+            const result = await response.json();
+            if (result.result?.data) {
+              newImagesMap[product.id] = result.result.data;
+            }
+          }
+        } catch (error) {
+          console.error(`Failed to load images for product ${product.id}:`, error);
+        }
+      }
+      
+      setProductImagesMap(newImagesMap);
+    };
+    
+    if (products.length > 0) {
+      loadImages();
+    }
+  }, [products]);
 
   const createOrderMutation = trpc.orders.create.useMutation();
 

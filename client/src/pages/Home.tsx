@@ -12,7 +12,25 @@ interface CartItem {
 }
 
 export default function Home() {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  // Initialize cart from localStorage
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('nuocmam_cart');
+      return saved ? JSON.parse(saved) : [];
+    } catch (error) {
+      console.error('Failed to load cart from localStorage:', error);
+      return [];
+    }
+  });
+
+  // Save cart to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('nuocmam_cart', JSON.stringify(cart));
+    } catch (error) {
+      console.error('Failed to save cart to localStorage:', error);
+    }
+  }, [cart]);
   const [showCart, setShowCart] = useState(false);
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
@@ -85,7 +103,15 @@ export default function Home() {
   };
 
   const removeFromCart = (id: number) => {
-    setCart(cart.filter(item => item.id !== id));
+    const updated = cart.filter(item => item.id !== id);
+    setCart(updated);
+  };
+
+  const clearCart = () => {
+    if (confirm('Bạn chắc chắn muốn xóa toàn bộ giỏ hàng?')) {
+      setCart([]);
+      localStorage.removeItem('nuocmam_cart');
+    }
   };
 
   const getTotalPrice = () => {

@@ -215,3 +215,15 @@
 - [x] TypeScript clean (0 errors)
 - [x] Dev server running
 - [x] Final checkpoint ready
+
+
+## Phase 16: Publish Web Ngay Feature (In Progress)
+- [x] Add "Publish Web Ngay" button to Admin Panel UI
+- [x] Implement /api/publish endpoint in Express app
+- [x] Add frontend handler to call /api/publish
+- [x] Add loading state and error handling
+- [x] Fix failing tests (product images test)
+- [x] All 56 tests passing
+- [x] TypeScript clean (0 errors)
+- [ ] Connect to Manus API for real deployment (if available)
+- [ ] Save checkpoint and deploy

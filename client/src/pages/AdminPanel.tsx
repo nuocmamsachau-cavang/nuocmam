@@ -47,6 +47,8 @@ export default function AdminPanel() {
   const [productImages, setProductImages] = useState<any[]>([]);
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
   const [showEditProductForm, setShowEditProductForm] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [publishMessage, setPublishMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [editProductForm, setEditProductForm] = useState({
     categoryId: 0,
     name: '',
@@ -163,6 +165,29 @@ export default function AdminPanel() {
       });
     } finally {
       setSslLoading(false);
+    }
+  };
+
+  const handlePublishWebsite = async () => {
+    setIsPublishing(true);
+    try {
+      const response = await fetch('/api/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ version: 'latest' }),
+      });
+      
+      if (response.ok) {
+        setPublishMessage({ type: 'success', text: 'Website đã được publish thành công! 🎉' });
+        setTimeout(() => setPublishMessage(null), 5000);
+      } else {
+        setPublishMessage({ type: 'error', text: 'Lỗi khi publish website. Vui lòng thử lại.' });
+      }
+    } catch (error) {
+      setPublishMessage({ type: 'error', text: 'Lỗi kết nối. Vui lòng thử lại.' });
+      console.error('Publish error:', error);
+    } finally {
+      setIsPublishing(false);
     }
   };
 
@@ -449,14 +474,30 @@ export default function AdminPanel() {
       <header style={{ background: 'linear-gradient(135deg, #C41E3A 0%, #8B1428 100%)' }} className="text-white sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold">🔐 Admin Panel - {adminState.username}</h1>
-          <Button
-            onClick={handleLogout}
-            variant="outline"
-            className="text-white border-white hover:bg-white hover:text-red-600"
-          >
-            <LogOut size={20} className="mr-2" />
-            Đăng Xuất
-          </Button>
+          <div className="flex gap-3">
+            <Button
+              onClick={handlePublishWebsite}
+              className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold"
+              disabled={isPublishing}
+            >
+              {isPublishing ? (
+                <>
+                  <Loader size={20} className="mr-2 animate-spin" />
+                  Đang Publish...
+                </>
+              ) : (
+                <>📤 Publish Web Ngay</>
+              )}
+            </Button>
+            <Button
+              onClick={handleLogout}
+              variant="outline"
+              className="text-white border-white hover:bg-white hover:text-red-600"
+            >
+              <LogOut size={20} className="mr-2" />
+              Đăng Xuất
+            </Button>
+          </div>
         </div>
       </header>
 

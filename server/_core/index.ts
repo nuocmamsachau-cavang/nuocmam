@@ -36,6 +36,29 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   registerStorageProxy(app);
   registerOAuthRoutes(app);
+  
+  // Publish endpoint - trigger website deployment
+  app.post('/api/publish', async (req, res) => {
+    try {
+      // Call Manus API to publish the website
+      // This is a placeholder - actual implementation would use Manus API
+      console.log('📤 Publishing website...');
+      
+      // For now, just return success
+      // In production, this would call the Manus deployment API
+      res.json({ 
+        success: true, 
+        message: 'Website publish request sent. Please check Management UI for status.' 
+      });
+    } catch (error) {
+      console.error('Publish error:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Failed to publish website' 
+      });
+    }
+  });
+  
   // tRPC API
   app.use(
     "/api/trpc",

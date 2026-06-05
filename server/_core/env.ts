@@ -7,4 +7,5 @@ export const ENV = {
   isProduction: process.env.NODE_ENV === "production",
   forgeApiUrl: process.env.BUILT_IN_FORGE_API_URL ?? "",
   forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
+  websiteId: process.env.VITE_APP_ID ?? "", // Space ID is same as VITE_APP_ID
 };

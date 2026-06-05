@@ -177,11 +177,13 @@ export default function AdminPanel() {
         body: JSON.stringify({ version: 'latest' }),
       });
       
-      if (response.ok) {
-        setPublishMessage({ type: 'success', text: 'Website đã được publish thành công! 🎉' });
-        setTimeout(() => setPublishMessage(null), 5000);
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        setPublishMessage({ type: 'success', text: data.message });
+        setTimeout(() => setPublishMessage(null), 8000);
       } else {
-        setPublishMessage({ type: 'error', text: 'Lỗi khi publish website. Vui lòng thử lại.' });
+        setPublishMessage({ type: 'error', text: data.message || 'Lỗi khi publish website. Vui lòng thử lại.' });
       }
     } catch (error) {
       setPublishMessage({ type: 'error', text: 'Lỗi kết nối. Vui lòng thử lại.' });

@@ -228,3 +228,12 @@
 - [x] Add publishMessage display in Admin Panel header
 - [x] Connect to Manus API for real deployment (placeholder ready - no public API available)
 - [x] Save checkpoint and deploy
+
+
+## Phase 17: Auto-Deploy via Manus API (Completed)
+- [x] Get Manus API key from environment (BUILT_IN_FORGE_API_KEY)
+- [x] Implement /api/publish endpoint to call Manus website.publish API
+- [x] Add polling logic to check deployment status (max 60 seconds)
+- [x] Update frontend to show real deployment status
+- [x] Test auto-deployment workflow (56/56 tests passing)
+- [x] Save checkpoint and deploy

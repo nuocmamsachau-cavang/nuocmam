@@ -37,24 +37,96 @@ async function startServer() {
   registerStorageProxy(app);
   registerOAuthRoutes(app);
   
-  // Publish endpoint - trigger website deployment
+  // Publish endpoint - trigger website deployment via Manus API
   app.post('/api/publish', async (req, res) => {
     try {
-      // Call Manus API to publish the website
-      // This is a placeholder - actual implementation would use Manus API
-      console.log('📤 Publishing website...');
+      console.log('📤 Publishing website via Manus API...');
       
-      // For now, just return success
-      // In production, this would call the Manus deployment API
-      res.json({ 
-        success: true, 
-        message: 'Website publish request sent. Please check Management UI for status.' 
+      // Use Space ID (which is the website identifier in Manus)
+      const spaceId = process.env.VITE_APP_ID;
+      const forgeApiUrl = process.env.BUILT_IN_FORGE_API_URL || 'https://forge.manus.ai';
+      const forgeApiKey = process.env.BUILT_IN_FORGE_API_KEY;
+      
+      if (!forgeApiKey) {
+        return res.status(500).json({ 
+          success: false, 
+          message: 'Manus API key not configured' 
+        });
+      }
+      
+      // Call Manus website.publish API
+      const publishResponse = await fetch(`${forgeApiUrl}/v2/website.publish`, {
+        method: 'POST',
+        headers: {
+          'x-manus-api-key': forgeApiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          website_id: spaceId,
+        }),
       });
+      
+      if (!publishResponse.ok) {
+        const error = await publishResponse.text();
+        console.error('Manus API error:', error);
+        return res.status(publishResponse.status).json({ 
+          success: false, 
+          message: `Manus API error: ${error}` 
+        });
+      }
+      
+      const publishData = await publishResponse.json();
+      console.log('✅ Publish request sent to Manus:', publishData);
+      
+      // Poll for deployment status
+      let publishStatus = 'publishing';
+      let attempts = 0;
+      const maxAttempts = 30; // 60 seconds max (2 second intervals)
+      
+      while (publishStatus === 'publishing' && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
+        
+        const statusResponse = await fetch(
+          `${forgeApiUrl}/v2/website.status?website_id=${publishData.website_id}`,
+          {
+            headers: {
+              'x-manus-api-key': forgeApiKey,
+            },
+          }
+        );
+        
+        if (statusResponse.ok) {
+          const statusData = await statusResponse.json();
+          publishStatus = statusData.publish_status;
+          console.log(`📊 Deployment status: ${publishStatus}`);
+          attempts++;
+        }
+      }
+      
+      if (publishStatus === 'published') {
+        res.json({ 
+          success: true, 
+          message: '✅ Website đã được publish thành công! 🎉',
+          website_id: publishData.website_id,
+          version_id: publishData.version_id,
+        });
+      } else if (publishStatus === 'failed') {
+        res.status(500).json({ 
+          success: false, 
+          message: '❌ Deployment failed. Please try again.' 
+        });
+      } else {
+        res.json({ 
+          success: true, 
+          message: '⏳ Deployment in progress. Please check the website in a moment.',
+          website_id: publishData.website_id,
+        });
+      }
     } catch (error) {
       console.error('Publish error:', error);
       res.status(500).json({ 
         success: false, 
-        message: 'Failed to publish website' 
+        message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}` 
       });
     }
   });

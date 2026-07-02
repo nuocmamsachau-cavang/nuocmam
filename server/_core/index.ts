@@ -142,6 +142,72 @@ async function startServer() {
     }
   });
   
+  // Scheduled publish endpoint - triggered by Manus Heartbeat
+  app.post('/api/scheduled/publish-website', async (req, res) => {
+    try {
+      console.log('🔄 [Scheduled] Publishing website via Heartbeat...');
+      
+      // Import database functions
+      const { getSessionId } = await import('../db.js');
+      
+      // Get Session ID from database
+      const taskId = await getSessionId();
+      
+      if (!taskId) {
+        return res.status(200).json({ 
+          ok: true,
+          skipped: 'Session ID not configured' 
+        });
+      }
+      
+      const forgeApiUrl = 'https://api.manus.ai';
+      const forgeApiKey = process.env.BUILT_IN_FORGE_API_KEY;
+      
+      if (!forgeApiKey) {
+        return res.status(200).json({ 
+          ok: true,
+          skipped: 'API key not configured' 
+        });
+      }
+      
+      // Call Manus website.publish API
+      const publishResponse = await fetch(`${forgeApiUrl}/v2/website.publish`, {
+        method: 'POST',
+        headers: {
+          'x-manus-api-key': forgeApiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          task_id: taskId,
+        }),
+      });
+      
+      if (!publishResponse.ok) {
+        const error = await publishResponse.text();
+        console.error('[Scheduled] Manus API error:', error);
+        return res.status(200).json({ 
+          ok: true,
+          error: `API returned ${publishResponse.status}` 
+        });
+      }
+      
+      const publishData = await publishResponse.json();
+      console.log('✅ [Scheduled] Publish request sent to Manus:', publishData);
+      
+      res.json({ 
+        ok: true,
+        message: 'Website published successfully',
+        website_id: publishData.website_id,
+      });
+    } catch (error) {
+      console.error('[Scheduled] Publish error:', error);
+      res.status(200).json({ 
+        ok: true,
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
+  });
+  
   // tRPC API
   app.use(
     "/api/trpc",

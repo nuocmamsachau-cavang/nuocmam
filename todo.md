@@ -248,3 +248,13 @@
 - [x] Add "⚙ Cấu Hình Session" button in header
 - [x] All 56 tests passing
 - [x] Ready for production deployment
+
+
+## Phase 19: Auto-Publish via Manus Heartbeat (Completed)
+- [x] Add /api/scheduled/publish-website endpoint for Heartbeat triggers
+- [x] Create Manus Heartbeat cron job (every minute)
+- [x] Task UID: nbjV3siJnYr7VURLs3PXtj
+- [x] Save Heartbeat task UID to database
+- [x] All 56 tests passing
+- [x] Website now auto-publishes every minute
+- [x] Ready for production deployment

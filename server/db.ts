@@ -1,6 +1,6 @@
 import { eq, desc, asc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, categories, products, seoMetadata, orders, adminUsers, promotions, emailConfig, blogPosts, productReviews, productImages, ProductImage } from "../drizzle/schema";
+import { InsertUser, users, categories, products, seoMetadata, orders, adminUsers, promotions, emailConfig, blogPosts, productReviews, productImages, ProductImage, websiteSettings, WebsiteSetting } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -355,4 +355,43 @@ export async function createProduct(data: {
   // Get the newly created product by slug
   const result = await db.select().from(products).where(eq(products.slug, data.slug)).limit(1);
   return result.length > 0 ? result[0] : null;
+}
+
+
+// Website Settings Queries
+export async function getWebsiteSetting(key: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(websiteSettings).where(eq(websiteSettings.key, key)).limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function setWebsiteSetting(key: string, value: string, description?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const existing = await getWebsiteSetting(key);
+  if (existing) {
+    return db.update(websiteSettings).set({ value, description }).where(eq(websiteSettings.key, key));
+  } else {
+    return db.insert(websiteSettings).values({ key, value, description });
+  }
+}
+
+export async function getSessionId() {
+  const setting = await getWebsiteSetting('sessionId');
+  return setting?.value || null;
+}
+
+export async function setSessionId(sessionId: string) {
+  return setWebsiteSetting('sessionId', sessionId, 'Manus session ID for website deployment');
+}
+
+export async function getLastDeploymentTime() {
+  const setting = await getWebsiteSetting('lastDeploymentTime');
+  return setting?.value ? new Date(setting.value) : null;
+}
+
+export async function setLastDeploymentTime() {
+  return setWebsiteSetting('lastDeploymentTime', new Date().toISOString(), 'Last successful deployment timestamp');
 }

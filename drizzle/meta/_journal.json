@@ -36,6 +36,13 @@
       "when": 1780360641001,
       "tag": "0004_mighty_zodiak",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1782999133534,
+      "tag": "0005_slim_leper_queen",
+      "breakpoints": true
     }
   ]
 }

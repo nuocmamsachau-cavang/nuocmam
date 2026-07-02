@@ -40,17 +40,28 @@ async function startServer() {
   // Publish endpoint - trigger website deployment via Manus API
   app.post('/api/publish', async (req, res) => {
     try {
-      console.log('📤 Publishing website via Manus API...');
+      console.log('📤 Publishing website...');
       
-      // Use Space ID (which is the website identifier in Manus)
-      const spaceId = process.env.VITE_APP_ID;
-      const forgeApiUrl = process.env.BUILT_IN_FORGE_API_URL || 'https://forge.manus.ai';
+      // Import database functions
+      const { getSessionId } = await import('../db.js');
+      
+      // Get Session ID from database
+      const taskId = await getSessionId();
+      
+      if (!taskId) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Session ID not configured. Please set it in Admin Panel.' 
+        });
+      }
+      
+      const forgeApiUrl = 'https://api.manus.ai';
       const forgeApiKey = process.env.BUILT_IN_FORGE_API_KEY;
       
       if (!forgeApiKey) {
         return res.status(500).json({ 
           success: false, 
-          message: 'Manus API key not configured' 
+          message: 'API key not configured' 
         });
       }
       
@@ -62,7 +73,7 @@ async function startServer() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          website_id: spaceId,
+          task_id: taskId,
         }),
       });
       
@@ -87,7 +98,7 @@ async function startServer() {
         await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
         
         const statusResponse = await fetch(
-          `${forgeApiUrl}/v2/website.status?website_id=${publishData.website_id}`,
+          `${forgeApiUrl}/v2/website.status?website_id=${publishData.website_id || publishData.id}`,
           {
             headers: {
               'x-manus-api-key': forgeApiKey,

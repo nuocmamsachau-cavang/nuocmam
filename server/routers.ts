@@ -5,7 +5,7 @@ import { publicProcedure, router } from "./_core/trpc";
 import { notifyOwner } from "./_core/notification";
 import { storagePut } from "./storage";
 import { z } from "zod";
-import { getCategories, getCategoryById, getAllProducts, getProductById, updateProduct, deleteProduct, createProduct, getSeoMetadata, createOrder, getOrders, getAdminByUsername, getDb, getPromotions, createPromotion, getEmailConfig, saveEmailConfig, getBlogPosts, getBlogPostBySlug, createBlogPost, getAllBlogPosts, getProductReviews, getApprovedReviews, createProductReview, getAllProductReviews, approveProductReview, getProductImages, getProductImageById, createProductImage, updateProductImage, deleteProductImage } from "./db";
+import { getCategories, getCategoryById, getAllProducts, getProductById, updateProduct, deleteProduct, createProduct, getSeoMetadata, createOrder, getOrders, getAdminByUsername, getDb, getPromotions, createPromotion, getEmailConfig, saveEmailConfig, getBlogPosts, getBlogPostBySlug, createBlogPost, getAllBlogPosts, getProductReviews, getApprovedReviews, createProductReview, getAllProductReviews, approveProductReview, getProductImages, getProductImageById, createProductImage, updateProductImage, deleteProductImage, getSessionId, setSessionId, getLastDeploymentTime, setLastDeploymentTime } from "./db";
 import { hashPassword, verifyPassword, generateAdminToken } from "./auth";
 import { categories, products, seoMetadata, orders, adminUsers, promotions, emailConfig, blogPosts, productReviews, productImages } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
@@ -388,7 +388,7 @@ export const appRouter = router({
         await updateProductImage(id, updateData);
         return getProductImageById(id);
       }),
-    delete: publicProcedure
+        delete: publicProcedure
       .input(z.number())
       .mutation(async ({ input }) => {
         await deleteProductImage(input);
@@ -396,8 +396,18 @@ export const appRouter = router({
       }),
   }),
 
-
+  settings: router({
+    getSessionId: publicProcedure.query(async () => {
+      const sessionId = await getSessionId();
+      return { sessionId };
+    }),
+    setSessionId: publicProcedure
+      .input(z.object({ sessionId: z.string() }))
+      .mutation(async ({ input }) => {
+        await setSessionId(input.sessionId);
+        return { success: true, sessionId: input.sessionId };
+      }),
+  }),
 });
-
 export type AppRouter = typeof appRouter;
 

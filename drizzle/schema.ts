@@ -198,3 +198,16 @@ export const productImages = mysqlTable("productImages", {
 
 export type ProductImage = typeof productImages.$inferSelect;
 export type InsertProductImage = typeof productImages.$inferInsert;
+
+// Website Settings - Store Session ID and deployment info
+export const websiteSettings = mysqlTable("websiteSettings", {
+  id: int("id").autoincrement().primaryKey(),
+  key: varchar("key", { length: 255 }).notNull().unique(), // e.g., "sessionId", "lastDeploymentTime"
+  value: text("value").notNull(),
+  description: text("description"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type WebsiteSetting = typeof websiteSettings.$inferSelect;
+export type InsertWebsiteSetting = typeof websiteSettings.$inferInsert;

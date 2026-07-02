@@ -237,3 +237,14 @@
 - [x] Update frontend to show real deployment status
 - [x] Test auto-deployment workflow (56/56 tests passing)
 - [x] Save checkpoint and deploy
+
+
+## Phase 18: Auto-Deploy via Database Storage (Completed)
+- [x] Create websiteSettings table to store Session ID
+- [x] Add helper functions getSessionId() and setSessionId()
+- [x] Add tRPC procedures to save/retrieve Session ID
+- [x] Update /api/publish endpoint to get Session ID from database
+- [x] Add Session ID configuration form to Admin Panel
+- [x] Add "⚙ Cấu Hình Session" button in header
+- [x] All 56 tests passing
+- [x] Ready for production deployment

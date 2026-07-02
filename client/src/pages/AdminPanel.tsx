@@ -49,6 +49,8 @@ export default function AdminPanel() {
   const [showEditProductForm, setShowEditProductForm] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishMessage, setPublishMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [sessionId, setSessionId] = useState('');
+  const [showSessionIdForm, setShowSessionIdForm] = useState(false);
   const [editProductForm, setEditProductForm] = useState({
     categoryId: 0,
     name: '',
@@ -101,6 +103,8 @@ export default function AdminPanel() {
   const { data: productImagesData } = trpc.productImages.getByProductId.useQuery(editingProductId || 0, {
     enabled: !!editingProductId,
   });
+  const { data: sessionIdData } = trpc.settings.getSessionId.useQuery();
+  const setSessionIdMutation = trpc.settings.setSessionId.useMutation();
 
 ;
   const createPromotionMutation = trpc.promotions.create.useMutation();
@@ -125,6 +129,12 @@ export default function AdminPanel() {
   useEffect(() => {
     if (promotionsData) setPromotions(promotionsData);
   }, [promotionsData]);
+
+  useEffect(() => {
+    if (sessionIdData?.sessionId) {
+      setSessionId(sessionIdData.sessionId);
+    }
+  }, [sessionIdData]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,6 +175,21 @@ export default function AdminPanel() {
       });
     } finally {
       setSslLoading(false);
+    }
+  };
+
+  const handleSaveSessionId = async () => {
+    if (!sessionId.trim()) {
+      alert('Vui lòng nhập Session ID');
+      return;
+    }
+    try {
+      await setSessionIdMutation.mutateAsync({ sessionId });
+      alert('Lưu Session ID thành công!');
+      setShowSessionIdForm(false);
+    } catch (error) {
+      alert('Lỗi khi lưu Session ID');
+      console.error(error);
     }
   };
 
@@ -478,6 +503,12 @@ export default function AdminPanel() {
           <h1 className="text-2xl font-bold">🔐 Admin Panel - {adminState.username}</h1>
           <div className="flex gap-3">
             <Button
+              onClick={() => setShowSessionIdForm(!showSessionIdForm)}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-bold text-sm"
+            >
+              ⚙ Cấu Hình Session
+            </Button>
+            <Button
               onClick={handlePublishWebsite}
               className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold"
               disabled={isPublishing}
@@ -507,6 +538,28 @@ export default function AdminPanel() {
                 : 'bg-red-100 text-red-800 border border-red-300'
             }`}>
               {publishMessage.text}
+            </div>
+          )}
+          {showSessionIdForm && (
+            <div className="mt-4 p-4 bg-white rounded border border-gray-300">
+              <h3 className="text-black font-bold mb-2">Cấu Hình Session ID</h3>
+              <p className="text-black text-sm mb-2">Session ID hiện tại: {sessionId ? sessionId.substring(0, 10) + '...' : 'Chưa đặt'}</p>
+              <div className="flex gap-2">
+                <Input
+                  type="text"
+                  placeholder="Nhập Session ID mới"
+                  value={sessionId}
+                  onChange={(e) => setSessionId(e.target.value)}
+                  className="flex-1 text-black"
+                />
+                <Button
+                  onClick={handleSaveSessionId}
+                  className="bg-green-500 hover:bg-green-600 text-white"
+                >
+                  <Save size={20} className="mr-2" />
+                  Lưu
+                </Button>
+              </div>
             </div>
           )}
         </div>

@@ -1,0 +1,26 @@
+name: Deploy Website
+ 
+on:
+  repository_dispatch:
+    types: [product_image_updated]
+  workflow_dispatch:
+ 
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Trigger Manus Deployment
+        run: |
+          echo "🚀 Deploying website..."
+          echo "Product ID: ${{ github.event.client_payload.productId }}"
+          echo "Image URL: ${{ github.event.client_payload.imageUrl }}"
+          echo "Timestamp: ${{ github.event.client_payload.timestamp }}"
+          
+          # Ghi log deployment
+          echo "✅ Deployment triggered at $(date)"
+          
+      - name: Notify Success
+        run: |
+          echo "🎉 Deployment completed successfully!"

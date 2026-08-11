@@ -206,28 +206,29 @@ export default function ProductDetail() {
                   Thêm vào giỏ hàng
                 </Button>
 
-                {/* Product Details - Lê Gia Style Specifications with Dynamic Material Mapping */}
+                {/* Product Details - Authentic Sa Châu, Giao Thủy, Nam Định Specifications */}
                 <Card className="p-5 bg-amber-50/50 border-amber-200">
                   <h3 className="font-bold mb-3 text-amber-900 flex items-center gap-2">
-                    <Award size={18} className="text-amber-700" /> Đặc điểm & Tiêu chuẩn chất lượng
+                    <Award size={18} className="text-amber-700" /> Đặc điểm & Tiêu chuẩn chất lượng Sa Châu
                   </h3>
                   <div className="space-y-2 text-sm text-gray-700">
+                    <p><strong>Xuất xứ:</strong> Làng nghề nước mắm truyền thống Sa Châu, xã Giao Châu, huyện Giao Thủy, tỉnh Nam Định (hơn 200 năm lịch sử).</p>
                     <p><strong>Thành phần:</strong> {
-                      product.name.toLowerCase().includes('nục') ? 'Cá nục tươi tuyển chọn (95%), muối biển tinh khiết Sa Châu (5%).' :
-                      product.name.toLowerCase().includes('mực') ? 'Cá mực tươi nguyên chất (95%), muối biển tinh khiết (5%).' :
-                      product.name.toLowerCase().includes('cơm') ? 'Cá cơm than tươi nguyên chất (75%), muối biển tinh khiết (25%).' :
-                      product.name.toLowerCase().includes('tôm') ? 'Tép biển tươi / tôm sú nguyên chất, muối biển tinh khiết.' :
-                      'Cá biển tươi nguyên chất, muối biển tinh khiết Sa Châu.'
+                      product.name.toLowerCase().includes('nục') ? 'Cá nục tươi tuyển chọn và muối biển sạch theo tỷ lệ vàng truyền thống.' :
+                      product.name.toLowerCase().includes('mực') ? 'Cá mực tươi nguyên chất và muối biển sạch.' :
+                      product.name.toLowerCase().includes('cơm') ? 'Cá cơm than tươi nguyên chất và muối biển sạch.' :
+                      product.name.toLowerCase().includes('tôm') ? 'Tép biển tươi nguyên chất và muối biển sạch.' :
+                      'Cá biển tươi nguyên chất và muối biển sạch.'
                     }</p>
-                    <p><strong>Phương pháp:</strong> Ủ chượp tự nhiên trong lu sành phơi nắng theo phương pháp gài nén truyền thống làng nghề Sa Châu 200 năm.</p>
+                    <p><strong>Phương pháp ủ chượp:</strong> Phương pháp "ăn sương nằm nắng" độc đáo trong các ang/chum sành phơi ngoài trời dưới ánh nắng và sương gió vùng biển Giao Thủy, Nam Định.</p>
                     <p><strong>Đặc trưng:</strong> {
-                      product.name.toLowerCase().includes('nục') ? 'Nước mắm cá nục đậm đà, béo ngậy, giàu đạm tự nhiên, màu cánh gián sáng.' :
-                      product.name.toLowerCase().includes('mực') ? 'Nước mắm cá mực sánh đặc như mật ong, vị ngọt đậm đà đặc trưng.' :
-                      product.name.toLowerCase().includes('cơm') ? 'Nước mắm cá cơm vị ngọt thanh, hương thơm dịu nhẹ, hậu vị sâu.' :
-                      product.name.toLowerCase().includes('tôm') ? 'Mắm tôm nhuyễn mịn, thơm lừng đặc trưng, chuẩn vị gia truyền.' :
-                      'Nước mắm cốt nhĩ đậm đặc, tinh túy từ biển mẹ.'
+                      product.name.toLowerCase().includes('nục') ? 'Nước mắm cá nục đậm đà, màu cánh gián đặc trưng, giàu đạm tự nhiên và hậu vị sâu.' :
+                      product.name.toLowerCase().includes('mực') ? 'Nước mắm cá mực sánh đặc, hương vị đậm đà độc đáo của vùng biển Giao Thủy.' :
+                      product.name.toLowerCase().includes('cơm') ? 'Nước mắm cá cơm vị ngọt thanh, hương thơm dịu nhẹ, chuẩn cốt nhĩ truyền thống.' :
+                      product.name.toLowerCase().includes('tôm') ? 'Mắm tôm nhuyễn mịn, thơm lừng đặc trưng, chuẩn vị gia truyền đất Nam Định.' :
+                      'Nước mắm cốt nhĩ đậm đặc, tinh túy từ làng nghề 200 năm.'
                     }</p>
-                    <p><strong>Cam kết:</strong> 100% nguyên chất, không chất bảo quản, không đạm nhân tạo, không hương liệu.</p>
+                    <p><strong>Cam kết:</strong> 100% nguyên chất, không chất bảo quản, không đạm nhân tạo, không hóa chất.</p>
                     <p><strong>Bảo quản:</strong> Nơi khô ráo, thoáng mát, đậy kín nắp sau khi sử dụng.</p>
                   </div>
                 </Card>

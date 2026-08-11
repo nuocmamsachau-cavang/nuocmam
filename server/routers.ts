@@ -318,7 +318,13 @@ export const appRouter = router({
 
   // Product Images
   productImages: router({
-    getByProductId: publicProcedure.input(z.number()).query(({ input }) => getProductImages(input)),
+    getByProductId: publicProcedure.input(z.any()).query(({ input }) => {
+      let productId = 1;
+      if (typeof input === 'number') productId = input;
+      else if (input && typeof input === 'object' && 'json' in input) productId = Number(input.json);
+      else if (typeof input === 'string') productId = Number(input);
+      return getProductImages(productId);
+    }),
     getById: publicProcedure.input(z.number()).query(({ input }) => getProductImageById(input)),
     upload: publicProcedure
       .input(z.object({

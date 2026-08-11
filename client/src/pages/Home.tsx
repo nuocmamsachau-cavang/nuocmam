@@ -61,20 +61,18 @@ export default function Home() {
   const { data: categories = [] } = trpc.categories.list.useQuery();
   const [productImagesMap, setProductImagesMap] = useState<Record<number, any>>({});
 
-  // Load images for all products
+  const utils = trpc.useUtils();
+  
+  // Load images for all products using tRPC client utils
   useEffect(() => {
     const loadImages = async () => {
       const newImagesMap: Record<number, any> = {};
       
       for (const product of products) {
         try {
-          // Use fetch to call the tRPC endpoint
-          const response = await fetch(`/api/trpc/productImages.getByProductId?input=${encodeURIComponent(JSON.stringify({ json: product.id }))}`);
-          if (response.ok) {
-            const result = await response.json();
-            if (result.result?.data) {
-              newImagesMap[product.id] = result.result.data;
-            }
+          const data = await utils.productImages.getByProductId.fetch(product.id);
+          if (data && Array.isArray(data) && data.length > 0) {
+            newImagesMap[product.id] = data;
           }
         } catch (error) {
           console.error(`Failed to load images for product ${product.id}:`, error);

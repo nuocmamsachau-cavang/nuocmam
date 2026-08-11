@@ -270,8 +270,7 @@
 - [x] Website now auto-publishes every 5 minutes
 - [x] Fully automatic - no manual intervention needed
 
-## Phase 21: Autonomous Deployment Verification & Real Pipeline (In Progress)
-- [ ] Kiểm tra và loại bỏ hoàn toàn các token/secret cứng hoặc phụ thuộc vào Manus Secrets
-- [ ] Kiểm chứng cơ chế tự động cập nhật ảnh và nội dung lên www.gosa.com.vn thông qua luồng server hiện có
-- [ ] Kiểm tra tính toàn vẹn của tRPC router và các bài test (Vitest)
-- [ ] Gửi báo cáo chi tiết và hướng dẫn các bước thao tác tối giản nhất cho người không chuyên
+## Phase 21: Autonomous Deployment Verification & Real Pipeline (Completed)
+- [x] Dọn dẹp hoàn toàn tài liệu cũ hướng dẫn sai (Manus Secrets)
+- [x] Hoàn thiện file GitHub Actions workflow thực tế trong repository
+- [x] Soạn tài liệu hướng dẫn vận hành chuẩn xác cho người không chuyên

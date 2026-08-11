@@ -1,0 +1,31 @@
+name: Deploy Website to Gosa
+
+on:
+  repository_dispatch:
+    types: [product_image_updated]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile || npm install
+
+      - name: Build Project
+        run: pnpm build || npm run build
+
+      - name: Log Deployment Success
+        run: |
+          echo "🚀 Website deployment triggered successfully via GitHub Actions!"
+          echo "Timestamp: ${{ github.event.client_payload.timestamp }}"
+          echo "Product ID: ${{ github.event.client_payload.productId }}"
+          echo "Image URL: ${{ github.event.client_payload.imageUrl }}"

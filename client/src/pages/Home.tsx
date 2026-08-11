@@ -69,7 +69,7 @@ export default function Home() {
       for (const product of products) {
         try {
           // Use fetch to call the tRPC endpoint
-          const response = await fetch(`/api/trpc/productImages.getByProductId?input=${encodeURIComponent(JSON.stringify(product.id))}`);
+          const response = await fetch(`/api/trpc/productImages.getByProductId?input=${encodeURIComponent(JSON.stringify({ json: product.id }))}`);
           if (response.ok) {
             const result = await response.json();
             if (result.result?.data) {

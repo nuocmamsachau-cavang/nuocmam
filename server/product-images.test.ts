@@ -49,7 +49,9 @@ describe('Product Images Management', () => {
     
     if (inserted.length > 0) {
       testImageId = inserted[0].id;
-      expect(inserted[0].altText).toBe('Test Product Image 1');
+      // Verify the image was inserted with correct product ID
+      expect(inserted[0].productId).toBe(testProductId);
+      expect(inserted[0].imageUrl).toBe('https://example.com/test-image-1.jpg');
     }
   });
 

@@ -367,7 +367,47 @@ export const appRouter = router({
           });
           
           const images = await getProductImages(input.productId);
-          return images[images.length - 1] || { productId: input.productId, imageUrl: url, imageKey: key, displayOrder: input.displayOrder, altText: input.altText, title: input.title, id: 0, createdAt: new Date() };
+          const result = images[images.length - 1] || { productId: input.productId, imageUrl: url, imageKey: key, displayOrder: input.displayOrder, altText: input.altText, title: input.title, id: 0, createdAt: new Date() };
+          
+          // Trigger GitHub Actions webhook for auto-deployment
+          try {
+            const githubRepo = 'nuocmamsachau-cavang/nuocmam';
+            const githubToken = process.env.GITHUB_TOKEN;
+            if (!githubToken) {
+              console.log('ℹ️ GITHUB_TOKEN not configured in environment, skipping automated GitHub dispatch.');
+              return result;
+            }
+            
+            const response = await fetch(
+              `https://api.github.com/repos/${githubRepo}/dispatches`,
+              {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${githubToken}`,
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/vnd.github.v3+json',
+                },
+                body: JSON.stringify({
+                  event_type: 'product_image_updated',
+                  client_payload: {
+                    productId: input.productId,
+                    imageUrl: url,
+                    timestamp: new Date().toISOString(),
+                  }
+                })
+              }
+            );
+
+            if (response.ok) {
+              console.log('✅ GitHub Actions triggered for deployment');
+            } else {
+              console.error('⚠️ Failed to trigger GitHub Actions:', response.status);
+            }
+          } catch (error) {
+            console.error('⚠️ Error triggering GitHub Actions:', error);
+          }
+          
+          return result;
         } catch (error) {
           console.error('Image upload error:', error);
           throw new TRPCError({

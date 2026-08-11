@@ -3,7 +3,7 @@ import { useRoute, useLocation } from 'wouter';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ShoppingCart, X } from 'lucide-react';
+import { ShoppingCart, X, CheckCircle, ShieldCheck, Truck, Award } from 'lucide-react';
 
 interface CartItem {
   id: number;
@@ -74,15 +74,25 @@ export default function ProductDetail() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Images Section */}
               <div className="space-y-4">
-                <div className="relative w-full bg-gray-100 rounded-lg overflow-hidden" style={{ aspectRatio: '1/1' }}>
+                <div className="relative w-full bg-gray-100 rounded-lg overflow-hidden shadow-md" style={{ aspectRatio: '1/1' }}>
                   {sortedImages.length > 0 ? (
                     <img
                       src={sortedImages[selectedImageIndex].imageUrl}
                       alt={sortedImages[selectedImageIndex].altText || product.name}
                       className="w-full h-full object-cover"
                     />
+                  ) : product.imageUrl ? (
+                    <img
+                      src={product.imageUrl}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-6xl">🍶</div>
+                    <img
+                      src="https://images.unsplash.com/photo-1598514982205-f36804f32e98?w=800&q=80"
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
                   )}
                 </div>
 
@@ -167,25 +177,60 @@ export default function ProductDetail() {
 
                 {/* Add to Cart */}
                 <Button
+                  onClick={() => {
+                    try {
+                      const saved = localStorage.getItem('nuocmam_cart');
+                      const cart = saved ? JSON.parse(saved) : [];
+                      const existing = cart.find((item: any) => item.id === product.id);
+                      if (existing) {
+                        existing.quantity += quantity;
+                      } else {
+                        cart.push({
+                          id: product.id,
+                          name: product.name,
+                          price: parseFloat(product.price),
+                          quantity: quantity,
+                        });
+                      }
+                      localStorage.setItem('nuocmam_cart', JSON.stringify(cart));
+                      alert(`Đã thêm ${quantity} sản phẩm vào giỏ hàng!`);
+                      handleClose();
+                    } catch (error) {
+                      console.error('Error adding to cart:', error);
+                    }
+                  }}
                   style={{ backgroundColor: '#C41E3A' }}
-                  className="w-full text-white py-6 text-lg font-bold"
+                  className="w-full text-white py-6 text-lg font-bold hover:opacity-90 transition"
                 >
                   <ShoppingCart size={20} className="mr-2" />
                   Thêm vào giỏ hàng
                 </Button>
 
-                {/* Product Details */}
-                <Card className="p-4 bg-gray-50">
-                  <h3 className="font-bold mb-3">Thông tin sản phẩm</h3>
-                  <div className="space-y-2 text-sm">
-                    <p><strong>Tên:</strong> {product.name}</p>
-                    <p><strong>Slug:</strong> {product.slug}</p>
-                    <p><strong>Giá:</strong> {parseFloat(product.price).toLocaleString()}₫</p>
-                    {sortedImages.length > 0 && (
-                      <p><strong>Ảnh:</strong> {sortedImages.length} ảnh (tối ưu SEO)</p>
-                    )}
+                {/* Product Details - Lê Gia Style Specifications */}
+                <Card className="p-5 bg-amber-50/50 border-amber-200">
+                  <h3 className="font-bold mb-3 text-amber-900 flex items-center gap-2">
+                    <Award size={18} className="text-amber-700" /> Đặc điểm & Tiêu chuẩn chất lượng
+                  </h3>
+                  <div className="space-y-2 text-sm text-gray-700">
+                    <p><strong>Thành phần:</strong> Cá cơm than / cá nục tươi nguyên chất, muối biển tinh khiết.</p>
+                    <p><strong>Phương pháp:</strong> Ủ chượp tự nhiên trong lu sành/thùng gỗ theo phương pháp gài nén truyền thống làng nghề Sa Châu 200 năm.</p>
+                    <p><strong>Đặc trưng:</strong> Nước mắm cốt nhĩ đậm đặc, màu cánh gián tự nhiên, vị ngọt hậu sâu sắc.</p>
+                    <p><strong>Cam kết:</strong> 100% nguyên chất, không chất bảo quản, không hương liệu tổng hợp.</p>
+                    <p><strong>Bảo quản:</strong> Nơi khô ráo, thoáng mát, đậy kín nắp sau khi sử dụng.</p>
                   </div>
                 </Card>
+
+                {/* Trust Badges */}
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  <div className="flex items-center gap-2 text-xs text-gray-600 bg-gray-50 p-3 rounded border">
+                    <ShieldCheck size={20} className="text-green-600 shrink-0" />
+                    <span>Chứng nhận VSATTP & OCOP 4 Sao</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-gray-600 bg-gray-50 p-3 rounded border">
+                    <Truck size={20} className="text-blue-600 shrink-0" />
+                    <span>Giao hàng toàn quốc nhanh chóng</span>
+                  </div>
+                </div>
 
                 {/* SEO Info */}
                 {sortedImages.length > 0 && (

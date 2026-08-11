@@ -3,6 +3,7 @@ import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ShoppingCart, MapPin, Phone, Mail } from 'lucide-react';
+import { useLocation } from 'wouter';
 
 interface CartItem {
   id: number;
@@ -60,6 +61,7 @@ export default function Home() {
   const { data: products = [] } = trpc.products.list.useQuery();
   const { data: categories = [] } = trpc.categories.list.useQuery();
   const [productImagesMap, setProductImagesMap] = useState<Record<number, any>>({});
+  const [, setLocation] = useLocation();
 
   const utils = trpc.useUtils();
   
@@ -284,7 +286,11 @@ export default function Home() {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-4xl">🍶</div>
+                          <img 
+                            src="https://images.unsplash.com/photo-1598514982205-f36804f32e98?w=800&q=80" 
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                          />
                         )}
                       </div>
                       <h4 style={{ color: '#C41E3A' }} className="font-bold mb-2">{product.name}</h4>
@@ -300,7 +306,11 @@ export default function Home() {
                         >
                           + Thêm
                         </Button>
-                        <Button variant="outline" className="flex-1 text-sm">
+                        <Button 
+                          variant="outline" 
+                          className="flex-1 text-sm"
+                          onClick={() => setLocation(`/product/${product.id}`)}
+                        >
                           Chi Tiết
                         </Button>
                       </div>
@@ -335,7 +345,11 @@ export default function Home() {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-4xl">🍶</div>
+                          <img 
+                            src="https://images.unsplash.com/photo-1598514982205-f36804f32e98?w=800&q=80" 
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                          />
                         )}
                       </div>
                       <h4 style={{ color: '#C41E3A' }} className="font-bold mb-2">{product.name}</h4>
@@ -351,7 +365,11 @@ export default function Home() {
                         >
                           + Thêm
                         </Button>
-                        <Button variant="outline" className="flex-1 text-sm">
+                        <Button 
+                          variant="outline" 
+                          className="flex-1 text-sm"
+                          onClick={() => setLocation(`/product/${product.id}`)}
+                        >
                           Chi Tiết
                         </Button>
                       </div>

@@ -271,7 +271,13 @@ export default function Home() {
                   {groupedProducts[category.id]?.map((product: any) => (
                     <Card key={product.id} className="p-4 hover:shadow-lg transition">
                       <div className="relative w-full h-40 bg-gray-200 rounded mb-3 overflow-hidden">
-                        {productImagesMap[product.id]?.length > 0 ? (
+                        {product.imageUrl ? (
+                          <img 
+                            src={product.imageUrl} 
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : productImagesMap[product.id]?.length > 0 ? (
                           <img 
                             src={productImagesMap[product.id][0].imageUrl} 
                             alt={productImagesMap[product.id][0].altText || product.name}
@@ -316,7 +322,13 @@ export default function Home() {
                   {groupedProducts[category.id]?.map((product: any) => (
                     <Card key={product.id} className="p-4 hover:shadow-lg transition">
                       <div className="relative w-full h-40 bg-gray-200 rounded mb-3 overflow-hidden">
-                        {productImagesMap[product.id]?.length > 0 ? (
+                        {product.imageUrl ? (
+                          <img 
+                            src={product.imageUrl} 
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : productImagesMap[product.id]?.length > 0 ? (
                           <img 
                             src={productImagesMap[product.id][0].imageUrl} 
                             alt={productImagesMap[product.id][0].altText || product.name}

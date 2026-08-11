@@ -206,16 +206,28 @@ export default function ProductDetail() {
                   Thêm vào giỏ hàng
                 </Button>
 
-                {/* Product Details - Lê Gia Style Specifications */}
+                {/* Product Details - Lê Gia Style Specifications with Dynamic Material Mapping */}
                 <Card className="p-5 bg-amber-50/50 border-amber-200">
                   <h3 className="font-bold mb-3 text-amber-900 flex items-center gap-2">
                     <Award size={18} className="text-amber-700" /> Đặc điểm & Tiêu chuẩn chất lượng
                   </h3>
                   <div className="space-y-2 text-sm text-gray-700">
-                    <p><strong>Thành phần:</strong> Cá cơm than / cá nục tươi nguyên chất, muối biển tinh khiết.</p>
-                    <p><strong>Phương pháp:</strong> Ủ chượp tự nhiên trong lu sành/thùng gỗ theo phương pháp gài nén truyền thống làng nghề Sa Châu 200 năm.</p>
-                    <p><strong>Đặc trưng:</strong> Nước mắm cốt nhĩ đậm đặc, màu cánh gián tự nhiên, vị ngọt hậu sâu sắc.</p>
-                    <p><strong>Cam kết:</strong> 100% nguyên chất, không chất bảo quản, không hương liệu tổng hợp.</p>
+                    <p><strong>Thành phần:</strong> {
+                      product.name.toLowerCase().includes('nục') ? 'Cá nục tươi tuyển chọn (95%), muối biển tinh khiết Sa Châu (5%).' :
+                      product.name.toLowerCase().includes('mực') ? 'Cá mực tươi nguyên chất (95%), muối biển tinh khiết (5%).' :
+                      product.name.toLowerCase().includes('cơm') ? 'Cá cơm than tươi nguyên chất (75%), muối biển tinh khiết (25%).' :
+                      product.name.toLowerCase().includes('tôm') ? 'Tép biển tươi / tôm sú nguyên chất, muối biển tinh khiết.' :
+                      'Cá biển tươi nguyên chất, muối biển tinh khiết Sa Châu.'
+                    }</p>
+                    <p><strong>Phương pháp:</strong> Ủ chượp tự nhiên trong lu sành phơi nắng theo phương pháp gài nén truyền thống làng nghề Sa Châu 200 năm.</p>
+                    <p><strong>Đặc trưng:</strong> {
+                      product.name.toLowerCase().includes('nục') ? 'Nước mắm cá nục đậm đà, béo ngậy, giàu đạm tự nhiên, màu cánh gián sáng.' :
+                      product.name.toLowerCase().includes('mực') ? 'Nước mắm cá mực sánh đặc như mật ong, vị ngọt đậm đà đặc trưng.' :
+                      product.name.toLowerCase().includes('cơm') ? 'Nước mắm cá cơm vị ngọt thanh, hương thơm dịu nhẹ, hậu vị sâu.' :
+                      product.name.toLowerCase().includes('tôm') ? 'Mắm tôm nhuyễn mịn, thơm lừng đặc trưng, chuẩn vị gia truyền.' :
+                      'Nước mắm cốt nhĩ đậm đặc, tinh túy từ biển mẹ.'
+                    }</p>
+                    <p><strong>Cam kết:</strong> 100% nguyên chất, không chất bảo quản, không đạm nhân tạo, không hương liệu.</p>
                     <p><strong>Bảo quản:</strong> Nơi khô ráo, thoáng mát, đậy kín nắp sau khi sử dụng.</p>
                   </div>
                 </Card>

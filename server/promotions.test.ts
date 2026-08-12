@@ -94,3 +94,18 @@ describe('Promotion CRUD integration', () => {
     await db.delete(promotions).where(eq(promotions.id, promotionId));
   });
 });
+
+
+describe('Promotion public list contract', () => {
+  it('reads the full promotion schema used by the public homepage', async () => {
+    const { getPromotions } = await import('./db');
+    const rows = await getPromotions();
+    expect(Array.isArray(rows)).toBe(true);
+    if (rows.length > 0) {
+      expect(rows[0]).toHaveProperty('usageCount');
+      expect(rows[0]).toHaveProperty('maxUsage');
+      expect(rows[0]).toHaveProperty('createdAt');
+      expect(rows[0]).toHaveProperty('updatedAt');
+    }
+  });
+});

@@ -336,3 +336,10 @@
 - [x] Add tests for promotion CRUD, published blog visibility and approved review display
 - [x] Run TypeScript, Vitest, build and browser verification
 - [x] Save a fresh checkpoint after the final tested state
+
+## Phase 29: Promotion Visibility Bug
+- [x] Compare every promotion row in database with active-window filtering and public cards
+- [x] Check whether public domain is running the latest checkpoint and whether client cache hides a card
+- [x] Fix promotion mapping/filtering or deployment synchronization if an issue is found
+- [x] Verify all expected promotions on preview and public domain, then run tests
+- [x] Save a checkpoint for the visibility fix

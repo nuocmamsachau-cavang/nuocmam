@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ShoppingCart, MapPin, Phone, Mail } from 'lucide-react';
+import { Mail, MapPin, Phone, RotateCcw, Search, ShoppingCart, SlidersHorizontal, Star } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { getPublicBrandConfig, getHeroStyle } from '@/lib/brandAssets';
 import { getPromotionCards } from '@/lib/promotions';
@@ -43,7 +43,22 @@ export default function Home() {
   });
   const { data: promotionsData } = trpc.promotions.list.useQuery();
 
-  const { data: products = [] } = trpc.products.list.useQuery();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const parsedMinPrice = minPrice.trim() ? Number(minPrice) : undefined;
+  const parsedMaxPrice = maxPrice.trim() ? Number(maxPrice) : undefined;
+  const hasInvalidPriceRange = (parsedMinPrice !== undefined && Number.isNaN(parsedMinPrice))
+    || (parsedMaxPrice !== undefined && Number.isNaN(parsedMaxPrice))
+    || (parsedMinPrice !== undefined && parsedMaxPrice !== undefined && parsedMinPrice > parsedMaxPrice);
+  const productQuery = useMemo(() => ({
+    search: searchTerm.trim() || undefined,
+    minPrice: parsedMinPrice,
+    maxPrice: parsedMaxPrice,
+  }), [searchTerm, parsedMinPrice, parsedMaxPrice]);
+  const { data: products = [], isLoading: productsLoading } = trpc.products.list.useQuery(productQuery, {
+    enabled: !hasInvalidPriceRange,
+  });
   const { data: categories = [] } = trpc.categories.list.useQuery();
   const promotionCards = getPromotionCards(promotionsData as any[] | undefined);
   const { data: brandAssets } = trpc.brand.get.useQuery();
@@ -145,6 +160,64 @@ export default function Home() {
     acc[categoryId].push(product);
     return acc;
   }, {});
+
+  const resetProductFilters = () => {
+    setSearchTerm('');
+    setMinPrice('');
+    setMaxPrice('');
+  };
+
+  const renderRating = (product: any) => {
+    const averageRating = Number(product.averageRating ?? 0);
+    const reviewCount = Number(product.reviewCount ?? 0);
+    return (
+      <div className="mb-3 flex min-h-5 items-center gap-2 text-sm" aria-label={reviewCount > 0 ? `${averageRating} trên 5 sao từ ${reviewCount} đánh giá` : 'Chưa có đánh giá'}>
+        <span className="flex items-center gap-0.5 text-[#D4AF37]" aria-hidden="true">
+          {[1, 2, 3, 4, 5].map((star) => <Star key={star} size={15} className={star <= Math.round(averageRating) ? 'fill-current' : ''} />)}
+        </span>
+        {reviewCount > 0 ? (
+          <span className="text-xs text-gray-600">{averageRating.toFixed(1)} ({reviewCount} đánh giá)</span>
+        ) : (
+          <span className="text-xs text-gray-500">Chưa có đánh giá</span>
+        )}
+      </div>
+    );
+  };
+
+  const renderProductCard = (product: any) => (
+    <Card key={product.id} className="p-4 transition hover:-translate-y-1 hover:shadow-lg">
+      <div className="relative mb-3 flex h-40 w-full items-center justify-center overflow-hidden rounded bg-amber-100">
+        <img
+          src={(productImagesMap[product.id] && productImagesMap[product.id].length > 0)
+            ? productImagesMap[product.id][0].imageUrl
+            : (product.imageUrl || `https://picsum.photos/seed/nuocmam${product.id}/800/800`)}
+          alt={(productImagesMap[product.id] && productImagesMap[product.id].length > 0)
+            ? (productImagesMap[product.id][0].altText || product.name)
+            : product.name}
+          className="h-full w-full object-cover"
+          loading="lazy"
+          onError={(event) => {
+            const target = event.target as HTMLImageElement;
+            if (!target.src.includes('picsum.photos')) target.src = `https://picsum.photos/seed/nuocmam${product.id}/800/800`;
+          }}
+        />
+      </div>
+      <h4 style={{ color: '#C41E3A' }} className="mb-2 font-bold">{product.name}</h4>
+      <p className="mb-3 line-clamp-3 text-sm text-gray-600">{product.description}</p>
+      {renderRating(product)}
+      <div style={{ color: '#C41E3A' }} className="mb-4 text-xl font-bold">
+        {parseFloat(product.price).toLocaleString()}₫
+      </div>
+      <div className="flex gap-2">
+        <Button onClick={() => addToCart(product)} style={{ backgroundColor: '#D4AF37', color: '#C41E3A' }} className="flex-1 text-sm">
+          + Thêm
+        </Button>
+        <Button variant="outline" className="flex-1 text-sm" onClick={() => setLocation(`/product/${product.id}`)}>
+          Chi Tiết
+        </Button>
+      </div>
+    </Card>
+  );
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FEFDFB' }}>
@@ -258,130 +331,88 @@ export default function Home() {
       </section>
 
       {/* Products Section */}
-      <section id="products" className="py-16 px-4">
-        <div className="max-w-7xl mx-auto">
-          <h2 style={{ color: '#C41E3A' }} className="text-3xl font-bold mb-12 text-center border-b-4 border-yellow-600 pb-3 inline-block w-full">
+      <section id="products" className="px-4 py-16">
+        <div className="mx-auto max-w-7xl">
+          <h2 style={{ color: '#C41E3A' }} className="mb-8 inline-block w-full border-b-4 border-yellow-600 pb-3 text-center text-3xl font-bold">
             Danh Mục Sản Phẩm Truyền Thống
           </h2>
 
-          {/* Featured Categories */}
-          {categories
-            .filter(cat => ['Cá Lục', 'Cá Mực', 'Cá Cơm', 'Mắm Tôm'].includes(cat.name))
-            .sort((a, b) => ['Cá Lục', 'Cá Mực', 'Cá Cơm', 'Mắm Tôm'].indexOf(a.name) - ['Cá Lục', 'Cá Mực', 'Cá Cơm', 'Mắm Tôm'].indexOf(b.name))
-            .map(category => (
-              <div key={category.id} className="mb-12">
-                <h3 style={{ color: '#8B1428' }} className="text-2xl font-bold mb-6 border-l-4 border-yellow-600 pl-4">
-                  {category.name}
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
-                  {groupedProducts[category.id]?.map((product: any) => (
-                    <Card key={product.id} className="p-4 hover:shadow-lg transition">
-                      <div className="relative w-full h-40 bg-amber-100 rounded mb-3 overflow-hidden flex items-center justify-center">
-                        <img 
-                          src={
-                            (productImagesMap[product.id] && productImagesMap[product.id].length > 0)
-                              ? productImagesMap[product.id][0].imageUrl
-                              : (product.imageUrl || `https://picsum.photos/seed/nuocmam${product.id}/800/800`)
-                          } 
-                          alt={
-                            (productImagesMap[product.id] && productImagesMap[product.id].length > 0)
-                              ? (productImagesMap[product.id][0].altText || product.name)
-                              : product.name
-                          }
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            if (!target.src.includes('picsum.photos')) {
-                              target.src = `https://picsum.photos/seed/nuocmam${product.id}/800/800`;
-                            }
-                          }}
-                        />
-                      </div>
-                      <h4 style={{ color: '#C41E3A' }} className="font-bold mb-2">{product.name}</h4>
-                      <p className="text-sm text-gray-600 mb-3">{product.description}</p>
-                      <div style={{ color: '#C41E3A' }} className="text-xl font-bold mb-4">
-                        {parseFloat(product.price).toLocaleString()}₫
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={() => addToCart(product)}
-                          style={{ backgroundColor: '#D4AF37', color: '#C41E3A' }}
-                          className="flex-1 text-sm"
-                        >
-                          + Thêm
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          className="flex-1 text-sm"
-                          onClick={() => setLocation(`/product/${product.id}`)}
-                        >
-                          Chi Tiết
-                        </Button>
-                      </div>
-                    </Card>
-                  ))}
+          <div className="mb-10 rounded-2xl border border-amber-200 bg-white p-4 shadow-sm sm:p-6">
+            <div className="mb-4 flex items-center gap-2 font-bold text-[#8B1428]">
+              <SlidersHorizontal size={20} /> Tìm sản phẩm phù hợp
+            </div>
+            <div className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end">
+              <label className="block">
+                <span className="mb-2 block text-sm font-semibold text-gray-700">Từ khóa</span>
+                <div className="relative">
+                  <Search size={18} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#8B1428]" />
+                  <input
+                    value={searchTerm}
+                    onChange={(event) => setSearchTerm(event.target.value)}
+                    placeholder="Ví dụ: cá nục, cốt đặc biệt..."
+                    className="w-full rounded-lg border border-amber-200 bg-[#fffaf2] py-2.5 pl-10 pr-3 text-sm outline-none transition focus:border-[#C41E3A] focus:ring-2 focus:ring-[#D4AF37]/40"
+                  />
                 </div>
-              </div>
-            ))}
+              </label>
+              <label className="block">
+                <span className="mb-2 block text-sm font-semibold text-gray-700">Giá từ (₫)</span>
+                <input
+                  type="number"
+                  min="0"
+                  value={minPrice}
+                  onChange={(event) => setMinPrice(event.target.value)}
+                  placeholder="0"
+                  className="w-full rounded-lg border border-amber-200 bg-[#fffaf2] px-3 py-2.5 text-sm outline-none transition focus:border-[#C41E3A] focus:ring-2 focus:ring-[#D4AF37]/40"
+                />
+              </label>
+              <label className="block">
+                <span className="mb-2 block text-sm font-semibold text-gray-700">Giá đến (₫)</span>
+                <input
+                  type="number"
+                  min="0"
+                  value={maxPrice}
+                  onChange={(event) => setMaxPrice(event.target.value)}
+                  placeholder="Không giới hạn"
+                  className="w-full rounded-lg border border-amber-200 bg-[#fffaf2] px-3 py-2.5 text-sm outline-none transition focus:border-[#C41E3A] focus:ring-2 focus:ring-[#D4AF37]/40"
+                />
+              </label>
+              <Button variant="outline" onClick={resetProductFilters} className="border-amber-300 text-[#8B1428] hover:bg-amber-50">
+                <RotateCcw size={16} className="mr-2" /> Xóa lọc
+              </Button>
+            </div>
+            {hasInvalidPriceRange && (
+              <p className="mt-3 text-sm font-semibold text-red-700">Vui lòng nhập khoảng giá hợp lệ; giá tối thiểu không được lớn hơn giá tối đa.</p>
+            )}
+          </div>
 
-          {/* Legacy Categories */}
-          {categories
-            .filter(cat => !['Cá Lục', 'Cá Mực', 'Cá Cơm', 'Mắm Tôm'].includes(cat.name))
-            .map(category => (
-              <div key={category.id} className="mb-12">
-                <h3 style={{ color: '#8B1428' }} className="text-2xl font-bold mb-6 border-l-4 border-yellow-600 pl-4">
-                  {category.name}
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
-                  {groupedProducts[category.id]?.map((product: any) => (
-                    <Card key={product.id} className="p-4 hover:shadow-lg transition">
-                      <div className="relative w-full h-40 bg-amber-100 rounded mb-3 overflow-hidden flex items-center justify-center">
-                        <img 
-                          src={
-                            (productImagesMap[product.id] && productImagesMap[product.id].length > 0)
-                              ? productImagesMap[product.id][0].imageUrl
-                              : (product.imageUrl || `https://picsum.photos/seed/nuocmam${product.id}/800/800`)
-                          } 
-                          alt={
-                            (productImagesMap[product.id] && productImagesMap[product.id].length > 0)
-                              ? (productImagesMap[product.id][0].altText || product.name)
-                              : product.name
-                          }
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            if (!target.src.includes('picsum.photos')) {
-                              target.src = `https://picsum.photos/seed/nuocmam${product.id}/800/800`;
-                            }
-                          }}
-                        />
-                      </div>
-                      <h4 style={{ color: '#C41E3A' }} className="font-bold mb-2">{product.name}</h4>
-                      <p className="text-sm text-gray-600 mb-3">{product.description}</p>
-                      <div style={{ color: '#C41E3A' }} className="text-xl font-bold mb-4">
-                        {parseFloat(product.price).toLocaleString()}₫
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={() => addToCart(product)}
-                          style={{ backgroundColor: '#D4AF37', color: '#C41E3A' }}
-                          className="flex-1 text-sm"
-                        >
-                          + Thêm
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          className="flex-1 text-sm"
-                          onClick={() => setLocation(`/product/${product.id}`)}
-                        >
-                          Chi Tiết
-                        </Button>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            ))}
+          {productsLoading ? (
+            <p className="rounded-xl border border-amber-200 bg-white p-8 text-center text-gray-500">Đang tìm sản phẩm...</p>
+          ) : products.length === 0 ? (
+            <div className="rounded-xl border border-amber-200 bg-white p-10 text-center shadow-sm">
+              <Search className="mx-auto mb-4 text-[#D4AF37]" size={40} />
+              <h3 className="text-xl font-bold text-[#8B1428]">Không tìm thấy sản phẩm phù hợp</h3>
+              <p className="mt-2 text-gray-600">Hãy thử từ khóa khác hoặc mở rộng khoảng giá để xem thêm sản phẩm.</p>
+              <Button onClick={resetProductFilters} className="mt-5 bg-[#D4AF37] font-bold text-[#8B1428] hover:bg-[#c49f2f]">Xem toàn bộ sản phẩm</Button>
+            </div>
+          ) : (
+            <>
+              <p className="mb-6 text-sm text-gray-600">Đang hiển thị <strong className="text-[#8B1428]">{products.length}</strong> sản phẩm phù hợp.</p>
+              {categories.map((category) => {
+                const categoryProducts = groupedProducts[category.id] ?? [];
+                if (categoryProducts.length === 0) return null;
+                return (
+                  <div key={category.id} className="mb-12">
+                    <h3 style={{ color: '#8B1428' }} className="mb-6 border-l-4 border-yellow-600 pl-4 text-2xl font-bold">
+                      {category.name}
+                    </h3>
+                    <div className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                      {categoryProducts.map((product: any) => renderProductCard(product))}
+                    </div>
+                  </div>
+                );
+              })}
+            </>
+          )}
         </div>
       </section>
 

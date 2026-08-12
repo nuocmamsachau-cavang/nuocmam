@@ -34,6 +34,9 @@ export default function ProductDetail() {
   const { data: approvedReviewsData = [] } = trpc.reviews.getApproved.useQuery(productId, {
     enabled: productId > 0,
   });
+  const { data: ratingSummary = { averageRating: 0, reviewCount: 0 } } = trpc.reviews.getSummary.useQuery(productId, {
+    enabled: productId > 0,
+  });
   const approvedReviews = filterApprovedReviews(approvedReviewsData);
   const reviewUtils = trpc.useUtils();
   const createReviewMutation = trpc.reviews.create.useMutation();
@@ -57,7 +60,10 @@ export default function ProductDetail() {
         title: reviewForm.title.trim(),
         content: reviewForm.content.trim(),
       });
-      await reviewUtils.reviews.getApproved.invalidate(productId);
+      await Promise.all([
+        reviewUtils.reviews.getApproved.invalidate(productId),
+        reviewUtils.reviews.getSummary.invalidate(productId),
+      ]);
       setReviewForm({ customerName: '', customerEmail: '', rating: 5, title: '', content: '' });
       setReviewNotice({ type: 'success', text: 'Đã gửi đánh giá. Nội dung sẽ hiển thị sau khi được duyệt.' });
     } catch (error) {
@@ -184,6 +190,16 @@ export default function ProductDetail() {
                     {product.name}
                   </h1>
                   <p className="text-gray-600">{product.description}</p>
+                  <div className="mt-4 flex flex-wrap items-center gap-3" aria-label={ratingSummary.reviewCount > 0 ? `${ratingSummary.averageRating} trên 5 sao từ ${ratingSummary.reviewCount} đánh giá đã duyệt` : 'Chưa có đánh giá đã duyệt'}>
+                    <span className="flex items-center gap-0.5 text-[#D4AF37]" aria-hidden="true">
+                      {[1, 2, 3, 4, 5].map((star) => <Star key={star} size={18} className={star <= Math.round(ratingSummary.averageRating) ? 'fill-current' : ''} />)}
+                    </span>
+                    {ratingSummary.reviewCount > 0 ? (
+                      <span className="text-sm font-semibold text-[#8B1428]">{ratingSummary.averageRating.toFixed(1)}/5 · {ratingSummary.reviewCount} đánh giá đã duyệt</span>
+                    ) : (
+                      <span className="text-sm text-gray-500">Chưa có đánh giá đã duyệt</span>
+                    )}
+                  </div>
                 </div>
 
                 <div>
@@ -304,7 +320,10 @@ export default function ProductDetail() {
 
                 {/* Approved Reviews and Public Submission */}
                 <Card className="p-5 border-amber-200 bg-white">
-                  <h3 className="mb-4 flex items-center gap-2 font-bold text-amber-900"><MessageSquare size={18} /> Đánh Giá Sản Phẩm</h3>
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                    <h3 className="flex items-center gap-2 font-bold text-amber-900"><MessageSquare size={18} /> Đánh Giá Sản Phẩm</h3>
+                    <span className="text-sm font-semibold text-[#8B1428]">{ratingSummary.reviewCount} đánh giá đã duyệt</span>
+                  </div>
                   <div className="space-y-3">
                     {approvedReviews.length === 0 ? (
                       <p className="rounded bg-gray-50 p-4 text-sm text-gray-600">Chưa có đánh giá được duyệt cho sản phẩm này.</p>

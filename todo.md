@@ -358,3 +358,11 @@
 - [x] Verify both promotions render on preview and public domain
 - [x] Run regression tests and save a checkpoint
 - [x] Map `MUA2TANG1` to the public card title “Mua 2 Tặng 1” and reward text “Tặng 1” instead of a percentage label
+
+## Phase 32: Blog Filters, Review Ratings and Product Search
+- [x] Add published blog category filtering and pagination with empty states
+- [x] Add approved review average rating and review count to product data/cards/detail
+- [x] Add product keyword search and min/max price filters with reset controls
+- [x] Add tests for blog pagination/filtering, rating aggregation and product filtering
+- [x] Run TypeScript, Vitest, build and responsive browser verification
+- [x] Save a new checkpoint after all three upgrades are validated

@@ -2,6 +2,7 @@ import { eq, and, desc, asc, sql, like } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, categories, products, seoMetadata, orders, adminUsers, promotions, emailConfig, blogPosts, productReviews, productImages, ProductImage, websiteSettings, WebsiteSetting } from "../drizzle/schema";
 import { ENV } from './_core/env';
+import { getApprovedRatingSummary, matchesProductFilters, paginateItems } from '../shared/catalogFeatures';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -111,12 +112,47 @@ export async function getProductsByCategory(categoryId: number) {
     .orderBy(asc(products.displayOrder));
 }
 
-export async function getAllProducts() {
+export type ProductListFilters = {
+  search?: string;
+  minPrice?: number;
+  maxPrice?: number;
+};
+
+export async function getAllProducts(filters: ProductListFilters = {}) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(products)
+  const rows = await db.select().from(products)
     .where(eq(products.isActive, true))
     .orderBy(asc(products.displayOrder));
+  const approvedReviews = await db.select({
+    productId: productReviews.productId,
+    rating: productReviews.rating,
+  }).from(productReviews).where(eq(productReviews.isApproved, true));
+  const ratingByProduct = new Map<number, { total: number; count: number }>();
+  for (const review of approvedReviews) {
+    const current = ratingByProduct.get(review.productId) ?? { total: 0, count: 0 };
+    current.total += review.rating;
+    current.count += 1;
+    ratingByProduct.set(review.productId, current);
+  }
+
+  return rows.filter((product) => matchesProductFilters(product, filters)).map((product) => {
+    const rating = ratingByProduct.get(product.id);
+    return {
+      ...product,
+      averageRating: rating ? Number((rating.total / rating.count).toFixed(1)) : 0,
+      reviewCount: rating?.count ?? 0,
+    };
+  });
+}
+
+export async function getProductRatingSummary(productId: number) {
+  const db = await getDb();
+  if (!db) return { averageRating: 0, reviewCount: 0 };
+  const rows = await db.select({ rating: productReviews.rating })
+    .from(productReviews)
+    .where(and(eq(productReviews.productId, productId), eq(productReviews.isApproved, true)));
+  return getApprovedRatingSummary(rows);
 }
 
 export async function getProductById(id: number) {
@@ -211,12 +247,26 @@ export async function saveEmailConfig(config: any) {
 }
 
 // Blog Posts Queries
-export async function getBlogPosts() {
+export type BlogListFilters = {
+  category?: string;
+  page?: number;
+  pageSize?: number;
+};
+
+export async function getBlogPosts(filters: BlogListFilters = {}) {
   const db = await getDb();
-  if (!db) return [];
-  return db.select().from(blogPosts)
+  if (!db) return { items: [], total: 0, page: 1, pageSize: filters.pageSize ?? 6, totalPages: 0, categories: [] };
+  const allPosts = await db.select().from(blogPosts)
     .where(eq(blogPosts.isPublished, true))
     .orderBy(desc(blogPosts.publishedAt));
+  const categories = Array.from(new Set(allPosts.map((post) => post.category).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'vi'));
+  const filteredPosts = filters.category && filters.category !== 'all'
+    ? allPosts.filter((post) => post.category === filters.category)
+    : allPosts;
+  return {
+    ...paginateItems(filteredPosts, filters.page ?? 1, filters.pageSize ?? 6),
+    categories,
+  };
 }
 
 export async function getBlogPostBySlug(slug: string) {

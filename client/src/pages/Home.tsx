@@ -272,26 +272,15 @@ export default function Home() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {groupedProducts[category.id]?.map((product: any) => (
                     <Card key={product.id} className="p-4 hover:shadow-lg transition">
-                      <div className="relative w-full h-40 bg-gray-200 rounded mb-3 overflow-hidden">
-                        {product.imageUrl ? (
-                          <img 
-                            src={product.imageUrl} 
-                            alt={product.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : productImagesMap[product.id]?.length > 0 ? (
-                          <img 
-                            src={productImagesMap[product.id][0].imageUrl} 
-                            alt={productImagesMap[product.id][0].altText || product.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <img 
-                            src="https://images.unsplash.com/photo-1598514982205-f36804f32e98?w=800&q=80" 
-                            alt={product.name}
-                            className="w-full h-full object-cover"
-                          />
-                        )}
+                      <div className="relative w-full h-40 bg-amber-100 rounded mb-3 overflow-hidden flex items-center justify-center">
+                        <img 
+                          src={product.imageUrl || "https://images.unsplash.com/photo-1598514982205-f36804f32e98"} 
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1598514982205-f36804f32e98";
+                          }}
+                        />
                       </div>
                       <h4 style={{ color: '#C41E3A' }} className="font-bold mb-2">{product.name}</h4>
                       <p className="text-sm text-gray-600 mb-3">{product.description}</p>
@@ -331,26 +320,15 @@ export default function Home() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {groupedProducts[category.id]?.map((product: any) => (
                     <Card key={product.id} className="p-4 hover:shadow-lg transition">
-                      <div className="relative w-full h-40 bg-gray-200 rounded mb-3 overflow-hidden">
-                        {product.imageUrl ? (
-                          <img 
-                            src={product.imageUrl} 
-                            alt={product.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : productImagesMap[product.id]?.length > 0 ? (
-                          <img 
-                            src={productImagesMap[product.id][0].imageUrl} 
-                            alt={productImagesMap[product.id][0].altText || product.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <img 
-                            src="https://images.unsplash.com/photo-1598514982205-f36804f32e98?w=800&q=80" 
-                            alt={product.name}
-                            className="w-full h-full object-cover"
-                          />
-                        )}
+                      <div className="relative w-full h-40 bg-amber-100 rounded mb-3 overflow-hidden flex items-center justify-center">
+                        <img 
+                          src={product.imageUrl || "https://images.unsplash.com/photo-1598514982205-f36804f32e98"} 
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1598514982205-f36804f32e98";
+                          }}
+                        />
                       </div>
                       <h4 style={{ color: '#C41E3A' }} className="font-bold mb-2">{product.name}</h4>
                       <p className="text-sm text-gray-600 mb-3">{product.description}</p>

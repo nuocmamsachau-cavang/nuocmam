@@ -355,12 +355,21 @@ export const appRouter = router({
             imageBuffer = Buffer.from(input.imageData, 'base64');
           }
 
-          // Upload to S3
-          const { key, url } = await storagePut(
-            `products/${input.productId}/image-${Date.now()}.jpg`,
-            imageBuffer,
-            'image/jpeg'
-          );
+          // Upload to S3 with robust fallback to base64 data URL if S3/Forge fails
+          let url = input.imageData;
+          let key = `local-${Date.now()}`;
+          try {
+            const s3Result = await storagePut(
+              `products/${input.productId}/image-${Date.now()}.jpg`,
+              imageBuffer,
+              'image/jpeg'
+            );
+            url = s3Result.url;
+            key = s3Result.key;
+          } catch (storageErr) {
+            console.warn('⚠️ S3 storagePut failed, falling back to data URL:', storageErr);
+            url = input.imageData;
+          }
 
           // Save to database
           await createProductImage({

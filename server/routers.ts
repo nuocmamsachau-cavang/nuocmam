@@ -371,6 +371,14 @@ export const appRouter = router({
             altText: input.altText,
             title: input.title,
           });
+
+          // Also update the product's primary imageUrl so storefront reads it instantly
+          const db = await getDb();
+          if (db) {
+            await db.update(products)
+              .set({ imageUrl: url, imageKey: key })
+              .where(eq(products.id, input.productId));
+          }
           
           const images = await getProductImages(input.productId);
           const result = images[images.length - 1] || { productId: input.productId, imageUrl: url, imageKey: key, displayOrder: input.displayOrder, altText: input.altText, title: input.title, id: 0, createdAt: new Date() };
@@ -430,14 +438,33 @@ export const appRouter = router({
         title: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
-        const { id, ...updateData } = input;
-        await updateProductImage(id, updateData);
-        return getProductImageById(id);
+        const { id, ...data } = input;
+        await updateProductImage(id, data);
+        return { success: true };
       }),
-        delete: publicProcedure
+    delete: publicProcedure
       .input(z.number())
       .mutation(async ({ input }) => {
+        // Get image first to check product
+        const img = await getProductImageById(input);
         await deleteProductImage(input);
+        if (img) {
+          // Check remaining images for this product
+          const remaining = await getProductImages(img.productId);
+          const db = await getDb();
+          if (db) {
+            if (remaining.length > 0) {
+              const primary = remaining[0];
+              await db.update(products)
+                .set({ imageUrl: primary.imageUrl, imageKey: primary.imageKey })
+                .where(eq(products.id, img.productId));
+            } else {
+              await db.update(products)
+                .set({ imageUrl: null, imageKey: null })
+                .where(eq(products.id, img.productId));
+            }
+          }
+        }
         return { success: true };
       }),
   }),

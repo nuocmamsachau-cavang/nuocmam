@@ -8,7 +8,7 @@ describe("Orders", () => {
         customerPhone: "0867678527",
         customerEmail: "customer@example.com",
         customerAddress: "123 Đường ABC, Hà Nội",
-        items: JSON.stringify([{ id: 1, name: "Nước mắm Cá Lục", quantity: 2, price: 95000 }]),
+        items: JSON.stringify([{ id: 1, name: "Nước mắm Cá Nục", quantity: 2, price: 95000 }]),
         totalAmount: "190000",
       };
 
@@ -72,21 +72,21 @@ describe("Orders", () => {
 
     it("should parse order items correctly", () => {
       const items = [
-        { id: 1, name: "Nước mắm Cá Lục", quantity: 2, price: 95000 },
+        { id: 1, name: "Nước mắm Cá Nục", quantity: 2, price: 95000 },
         { id: 2, name: "Nước mắm Cá Mực", quantity: 1, price: 150000 },
       ];
       const itemsJson = JSON.stringify(items);
       const parsed = JSON.parse(itemsJson);
 
       expect(parsed).toHaveLength(2);
-      expect(parsed[0].name).toBe("Nước mắm Cá Lục");
+      expect(parsed[0].name).toBe("Nước mắm Cá Nục");
       expect(parsed[0].quantity).toBe(2);
       expect(parsed[1].price).toBe(150000);
     });
 
     it("should calculate total amount correctly", () => {
       const items = [
-        { id: 1, name: "Nước mắm Cá Lục", quantity: 2, price: 95000 },
+        { id: 1, name: "Nước mắm Cá Nục", quantity: 2, price: 95000 },
         { id: 2, name: "Nước mắm Cá Mực", quantity: 1, price: 150000 },
       ];
 

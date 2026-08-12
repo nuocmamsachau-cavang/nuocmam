@@ -1047,7 +1047,7 @@ export default function AdminPanel() {
                       <Input 
                         value={editingCategory ? editingCategory.name : newCategory.name} 
                         onChange={(e) => editingCategory ? setEditingCategory({...editingCategory, name: e.target.value}) : setNewCategory({...newCategory, name: e.target.value})} 
-                        placeholder="VD: Cá Lục"
+                        placeholder="VD: Cá Nục"
                       />
                     </div>
                     <div>

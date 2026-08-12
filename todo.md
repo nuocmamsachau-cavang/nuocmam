@@ -380,3 +380,9 @@
 - [x] Reduce non-essential vertical space while preserving brand messaging and promotions
 - [x] Verify product section visibility on desktop and mobile
 - [x] Run tests and production build, then save a checkpoint
+
+## Phase 35: Vietnamese Copy and Product Name Proofreading
+- [x] Audit all source and public-facing content for “Cá Lục” and related spelling inconsistencies
+- [x] Replace incorrect “Cá Lục” labels with “Cá Nục” where the product/category refers to cá nục
+- [x] Verify product names/descriptions and SEO copy remain consistent after correction
+- [x] Run tests, build and preview verification, then save a checkpoint

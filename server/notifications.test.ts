@@ -9,7 +9,7 @@ describe("Order Notifications", () => {
     customerEmail: "customer@example.com",
     customerAddress: "123 Đường ABC, Hà Nội",
     items: [
-      { name: "Nước Mắm Cá Lục", quantity: 2, price: 95000 },
+      { name: "Nước Mắm Cá Nục", quantity: 2, price: 95000 },
       { name: "Nước Mắm Cá Mực", quantity: 1, price: 150000 },
     ],
     totalAmount: 340000,
@@ -36,7 +36,7 @@ describe("Order Notifications", () => {
     it("should include all order items", () => {
       const html = generateOrderEmailHTML(mockOrder);
 
-      expect(html).toContain("Nước Mắm Cá Lục");
+      expect(html).toContain("Nước Mắm Cá Nục");
       expect(html).toContain("Nước Mắm Cá Mực");
       expect(html).toContain("x2");
       expect(html).toContain("x1");
@@ -84,7 +84,7 @@ describe("Order Notifications", () => {
     it("should include all items", () => {
       const message = generateZaloMessage(mockOrder);
 
-      expect(message).toContain("Nước Mắm Cá Lục");
+      expect(message).toContain("Nước Mắm Cá Nục");
       expect(message).toContain("Nước Mắm Cá Mực");
       expect(message).toContain("x2");
       expect(message).toContain("x1");

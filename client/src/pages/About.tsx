@@ -47,7 +47,7 @@ export default function About() {
             </p>
             <ul className="space-y-3 mb-6">
               <li className="text-lg">
-                <span style={{ color: '#C41E3A' }} className="font-bold">Nước mắm Cá Lục:</span> Đậm đà, béo ngậy, là dòng mắm truyền thống lâu đời nhất.
+                <span style={{ color: '#C41E3A' }} className="font-bold">Nước mắm Cá Nục:</span> Đậm đà, béo ngậy, là dòng mắm truyền thống lâu đời nhất.
               </li>
               <li className="text-lg">
                 <span style={{ color: '#C41E3A' }} className="font-bold">Nước mắm Cá Mực:</span> Quý hiếm, hương vị độc đáo, sánh đặc và cực kỳ bổ dưỡng.

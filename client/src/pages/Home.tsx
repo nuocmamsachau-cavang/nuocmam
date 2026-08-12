@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ShoppingCart, MapPin, Phone, Mail } from 'lucide-react';
 import { useLocation } from 'wouter';
+import { getPublicBrandConfig, getHeroStyle } from '@/lib/brandAssets';
 
 interface CartItem {
   id: number;
@@ -61,7 +62,10 @@ export default function Home() {
   const { data: products = [] } = trpc.products.list.useQuery();
   const { data: categories = [] } = trpc.categories.list.useQuery();
   const { data: brandAssets } = trpc.brand.get.useQuery();
-  const mascotLogo = brandAssets?.brand_mascot_logo || "/manus-storage/nuoc-mam-ca-vang-mascot_834f1187.jpg";
+  const publicBrand = getPublicBrandConfig(brandAssets);
+  const mascotLogo = publicBrand.mascotLogo;
+  const horizontalLogo = publicBrand.horizontalLogo;
+  const heroBanner = publicBrand.heroBanner;
   const [productImagesMap, setProductImagesMap] = useState<Record<number, any>>({});
   const [, setLocation] = useLocation();
 
@@ -198,7 +202,11 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section id="home" style={{ background: 'linear-gradient(135deg, #C41E3A 0%, #8B1428 100%)' }} className="text-white py-20 text-center">
+      <section
+        id="home"
+        style={getHeroStyle(heroBanner)}
+        className="text-white py-20 text-center min-h-[360px] flex flex-col items-center justify-center"
+      >
         <h1 className="text-5xl font-bold mb-4">Nước Mắm Cá Vàng</h1>
         <p className="text-2xl mb-4" style={{ color: '#D4AF37' }}>Tinh Túy Làng Nghề Sa Châu 200 Năm</p>
         <p className="text-lg mb-8 max-w-2xl mx-auto">Nước mắm truyền thống nguyên chất, kết tinh từ nắng gió biển cả và tâm huyết của những nghệ nhân giữ lửa làng nghề hơn 2 thế kỷ.</p>
@@ -439,6 +447,17 @@ export default function Home() {
 
       {/* Footer */}
       <footer style={{ backgroundColor: '#2C2C2C' }} className="text-white py-8 text-center">
+        {horizontalLogo && (
+          <img
+            src={horizontalLogo}
+            alt="Nước Mắm Cá Vàng - Sa Châu"
+            className="mx-auto mb-5 max-h-20 max-w-[280px] object-contain"
+            loading="lazy"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = 'none';
+            }}
+          />
+        )}
         <p>&copy; 2026 Nước Mắm Cá Vàng - Tinh Túy Làng Nghề Sa Châu 200 Năm.</p>
         <p className="mt-2">
           Địa chỉ: <a href="https://share.google/E2MS6ylUWEiN940B4" target="_blank" rel="noopener noreferrer" className="text-yellow-500 hover:underline">

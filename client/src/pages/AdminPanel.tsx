@@ -1319,7 +1319,8 @@ export default function AdminPanel() {
           <TabsContent value="brand" className="space-y-6">
             <Card className="p-6">
               <h2 style={{ color: '#C41E3A' }} className="text-2xl font-bold mb-2">🎨 Thư Viện Thương Hiệu & Nhận Diện (Brand Library)</h2>
-              <p className="text-sm text-gray-600 mb-6">Quản lý trực tiếp logo mascot, logo ngang, favicon và banner quảng cáo mà không cần can thiệp mã nguồn.</p>
+              <p className="text-sm text-gray-600 mb-2">Quản lý trực tiếp logo mascot, logo ngang, favicon và banner quảng cáo mà không cần can thiệp mã nguồn.</p>
+              <p className="text-xs text-gray-500 mb-6">Ảnh tải lên được lưu thành URL storage ổn định, tối đa 8MB. Sau khi lưu, tài sản sẽ được dùng trên website công khai ở đúng vị trí tương ứng.</p>
               
               <BrandAssetManager />
             </Card>
@@ -1334,6 +1335,8 @@ export default function AdminPanel() {
 function BrandAssetManager() {
   const { data: brandAssets, refetch } = trpc.brand.get.useQuery();
   const updateBrandMutation = trpc.brand.update.useMutation();
+  const uploadBrandMutation = trpc.brand.upload.useMutation();
+  const brandUtils = trpc.useUtils();
 
   const [assets, setAssets] = useState<{ [key: string]: { value: string; description?: string } }>({});
   const [uploadingKey, setUploadingKey] = useState<string | null>(null);
@@ -1351,8 +1354,9 @@ function BrandAssetManager() {
   const handleUpdate = async (key: string, value: string, description?: string) => {
     try {
       await updateBrandMutation.mutateAsync({ key, value, description });
+      await brandUtils.brand.get.invalidate();
       alert('Đã cập nhật tài sản thương hiệu thành công!');
-      refetch();
+      await refetch();
     } catch (err) {
       alert('Lỗi khi cập nhật tài sản thương hiệu');
     }
@@ -1362,23 +1366,43 @@ function BrandAssetManager() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > 8 * 1024 * 1024) {
+      alert('Ảnh thương hiệu không được vượt quá 8MB');
+      e.target.value = '';
+      return;
+    }
+
     setUploadingKey(key);
-    try {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64data = reader.result as string;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const imageData = reader.result as string;
+        const result = await uploadBrandMutation.mutateAsync({
+          key: key as 'brand_mascot_logo' | 'brand_horizontal_logo' | 'brand_favicon' | 'brand_hero_banner',
+          imageData,
+          mimeType: file.type || 'image/jpeg',
+          description: desc,
+        });
         setAssets(prev => ({
           ...prev,
-          [key]: { value: base64data, description: desc }
+          [key]: { value: result.url, description: desc },
         }));
-        await handleUpdate(key, base64data, desc);
+        await brandUtils.brand.get.invalidate();
+        await refetch();
+        alert('Đã tải ảnh lên storage và cập nhật website thành công!');
+      } catch (err) {
+        alert('Lỗi tải ảnh thương hiệu lên storage. Vui lòng thử lại.');
+      } finally {
         setUploadingKey(null);
-      };
-      reader.readAsDataURL(file);
-    } catch (err) {
-      alert('Lỗi tải ảnh lên');
+        e.target.value = '';
+      }
+    };
+    reader.onerror = () => {
+      alert('Không thể đọc tệp ảnh');
       setUploadingKey(null);
-    }
+      e.target.value = '';
+    };
+    reader.readAsDataURL(file);
   };
 
   const defaultKeys = [
@@ -1390,7 +1414,28 @@ function BrandAssetManager() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="space-y-6">
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <label className="block text-sm font-bold text-red-800 mb-2">Tiêu Đề Website / SEO Title</label>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Input
+              value={assets.brand_site_title?.value || 'Nước Mắm Cá Vàng - Tinh Túy Làng Nghề 200 Năm'}
+              onChange={(e) => setAssets({
+                ...assets,
+                brand_site_title: { value: e.target.value, description: 'Tiêu đề hiển thị trên tab trình duyệt' },
+              })}
+              placeholder="Nước Mắm Cá Vàng - Tinh Túy Làng Nghề 200 Năm"
+            />
+            <Button
+              className="bg-green-600 hover:bg-green-700 text-white whitespace-nowrap"
+              onClick={() => handleUpdate('brand_site_title', assets.brand_site_title?.value || '', 'Tiêu đề hiển thị trên tab trình duyệt')}
+            >
+              <Save size={14} className="mr-1" /> Lưu Tiêu Đề
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {defaultKeys.map(item => {
           const currentVal = assets[item.key]?.value || '';
           return (
@@ -1429,7 +1474,7 @@ function BrandAssetManager() {
                     <Plus size={14} className="mr-1" /> Tải Ảnh Lên
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/png,image/jpeg,image/webp,image/svg+xml"
                       className="hidden"
                       onChange={(e) => handleFileChange(item.key, e, item.desc)}
                     />
@@ -1446,6 +1491,7 @@ function BrandAssetManager() {
             </div>
           );
         })}
+        </div>
       </div>
     </div>
   );

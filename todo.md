@@ -282,8 +282,37 @@
 - [x] Ưu tiên hình ảnh mascot/logo gốc người dùng cung cấp; không dùng bản logo tái tạo bằng AI làm nhận diện chính
 
 ## Phase 23: Thư viện thương hiệu & Quản lý Media trong Admin Panel
-- [ ] Mở rộng bảng websiteSettings hoặc tạo bảng brandAssets để lưu logo mascot, logo ngang, favicon, banner
-- [ ] Xây dựng tRPC procedures (brand.get, brand.update)
-- [ ] Thêm tab "Thương Hiệu / Media" vào Admin Panel với form upload và xem trước
-- [ ] Đồng bộ tài sản thương hiệu đã lưu lên header và tiêu đề website
-- [ ] Kiểm thử toàn diện và chạy Vitest
+- [x] Mở rộng bảng websiteSettings hoặc tạo bảng brandAssets để lưu logo mascot, logo ngang, favicon, banner
+- [x] Xây dựng tRPC procedures (brand.get, brand.update)
+- [x] Thêm tab "Thương Hiệu / Media" vào Admin Panel với form upload và xem trước
+- [x] Đồng bộ tài sản thương hiệu đã lưu lên header và tiêu đề website
+- [x] Kiểm thử toàn diện và chạy Vitest
+
+## Phase 23: Brand Library & Dynamic Asset Management
+- [x] Create backend tRPC brand router (`brand.get`, `brand.update`) using `websiteSettings` table
+- [x] Add 'Thương Hiệu / Media' tab in AdminPanel.tsx with 10-tab grid layout
+- [x] Implement BrandAssetManager component for uploading and managing logos, favicons, and banners
+- [x] Update Home.tsx header to dynamically fetch and display the mascot logo from Brand Library
+- [x] Verify checkpoint and test end-to-end functionality
+
+## Phase 24: Render Brand Library Assets on Public Website
+- [x] Render `brand_hero_banner` as the real homepage hero background with fallback
+- [x] Render `brand_horizontal_logo` in public footer/brand section with fallback
+- [x] Apply `brand_favicon` dynamically to document head with fallback
+- [x] Replace Base64 image persistence with stable storage URL uploads for brand assets
+- [x] Add reliable cache invalidation and verify Admin replacement -> public website update
+- [x] Add Vitest coverage for brand asset mapping and fallback behavior
+- [x] Run browser/responsive verification and save a new checkpoint
+
+## Phase 25: Brand Library Verification Gaps
+- [x] Add dynamic website title/SEO title wiring from Brand Library, or explicitly scope title handling to the existing static title
+- [x] Implement shared tRPC cache invalidation for brand asset consumers after Admin update/upload
+- [x] Verify a real Admin asset replacement updates the public homepage/header/footer/favicon flow end-to-end
+- [x] Run explicit responsive verification for Brand Library and public brand rendering
+- [x] Save a fresh checkpoint after the final tested state
+
+## Phase 26: Evidence-Based Brand Library Validation
+- [x] Verify each Admin Panel asset save contract for mascot, horizontal logo, favicon, and hero banner with concrete readback values
+- [x] Verify each public consumer mapping: header mascot, footer horizontal logo, document favicon, hero background, and document title
+- [x] Run deterministic mobile, tablet, and desktop responsive checks using the rendered app and layout assertions
+- [x] Save a fresh checkpoint after all evidence-based validation passes

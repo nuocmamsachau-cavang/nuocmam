@@ -502,8 +502,53 @@ export const appRouter = router({
         description: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
+        const allowedKeys = ['brand_mascot_logo', 'brand_horizontal_logo', 'brand_favicon', 'brand_hero_banner', 'brand_site_title'];
+        if (!allowedKeys.includes(input.key)) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Tài sản thương hiệu không hợp lệ' });
+        }
+        if (input.value.startsWith('data:image')) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Ảnh tải lên phải dùng chức năng Tải Ảnh Lên để lưu storage URL ổn định' });
+        }
         await updateBrandAsset(input.key, input.value, input.description);
         return { success: true };
+      }),
+    upload: publicProcedure
+      .input(z.object({
+        key: z.enum(['brand_mascot_logo', 'brand_horizontal_logo', 'brand_favicon', 'brand_hero_banner']),
+        imageData: z.string().min(1),
+        mimeType: z.string().default('image/jpeg'),
+        description: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        let imageBuffer: Buffer;
+        let contentType = input.mimeType;
+
+        if (input.imageData.startsWith('data:')) {
+          const match = input.imageData.match(/^data:([^;]+);base64,(.+)$/);
+          if (!match) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: 'Định dạng ảnh không hợp lệ' });
+          }
+          contentType = match[1];
+          imageBuffer = Buffer.from(match[2], 'base64');
+        } else {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Ảnh tải lên không hợp lệ' });
+        }
+
+        if (!contentType.startsWith('image/')) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Chỉ chấp nhận tệp hình ảnh' });
+        }
+        if (imageBuffer.length > 8 * 1024 * 1024) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Ảnh thương hiệu không được vượt quá 8MB' });
+        }
+
+        const extension = contentType.split('/')[1]?.replace('svg+xml', 'svg') || 'jpg';
+        const uploaded = await storagePut(
+          `brand/${input.key}-${Date.now()}.${extension}`,
+          imageBuffer,
+          contentType,
+        );
+        await updateBrandAsset(input.key, uploaded.url, input.description);
+        return { success: true, url: uploaded.url, key: uploaded.key };
       }),
   }),
 });

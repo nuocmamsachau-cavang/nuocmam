@@ -1,5 +1,8 @@
 import { Toaster } from "@/components/ui/sonner";
+import { useEffect } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { trpc } from "./lib/trpc";
+import { getPublicBrandConfig } from "./lib/brandAssets";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -33,6 +36,28 @@ function Router() {
 //   to keep consistent foreground/background color across components
 // - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
 
+function BrandFavicon() {
+  const { data: brandAssets } = trpc.brand.get.useQuery();
+
+  useEffect(() => {
+    const publicBrand = getPublicBrandConfig(brandAssets);
+    document.title = publicBrand.siteTitle;
+
+    const faviconUrl = publicBrand.favicon;
+    if (!faviconUrl) return;
+
+    let favicon = document.querySelector<HTMLLinkElement>('link[rel~="icon"]');
+    if (!favicon) {
+      favicon = document.createElement('link');
+      favicon.rel = 'icon';
+      document.head.appendChild(favicon);
+    }
+    favicon.href = faviconUrl;
+  }, [brandAssets]);
+
+  return null;
+}
+
 function App() {
   return (
     <ErrorBoundary>
@@ -41,6 +66,7 @@ function App() {
         // switchable
       >
         <TooltipProvider>
+          <BrandFavicon />
           <Toaster />
           <Router />
         </TooltipProvider>

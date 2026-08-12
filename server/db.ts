@@ -1,4 +1,4 @@
-import { eq, desc, asc, sql } from "drizzle-orm";
+import { eq, desc, asc, sql, like } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, categories, products, seoMetadata, orders, adminUsers, promotions, emailConfig, blogPosts, productReviews, productImages, ProductImage, websiteSettings, WebsiteSetting } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -400,7 +400,7 @@ export async function setLastDeploymentTime() {
 export async function getBrandAssets() {
   const db = await getDb();
   if (!db) return {};
-  const settings = await db.select().from(websiteSettings).where(sql`key LIKE 'brand_%'`);
+  const settings = await db.select().from(websiteSettings).where(like(websiteSettings.key, 'brand_%'));
   const result: Record<string, string> = {};
   for (const s of settings) {
     result[s.key] = s.value;

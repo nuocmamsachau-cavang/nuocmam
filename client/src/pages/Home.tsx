@@ -274,8 +274,16 @@ export default function Home() {
                     <Card key={product.id} className="p-4 hover:shadow-lg transition">
                       <div className="relative w-full h-40 bg-amber-100 rounded mb-3 overflow-hidden flex items-center justify-center">
                         <img 
-                          src={product.imageUrl || `https://picsum.photos/seed/nuocmam${product.id}/800/800`} 
-                          alt={product.name}
+                          src={
+                            (productImagesMap[product.id] && productImagesMap[product.id].length > 0)
+                              ? productImagesMap[product.id][0].imageUrl
+                              : (product.imageUrl || `https://picsum.photos/seed/nuocmam${product.id}/800/800`)
+                          } 
+                          alt={
+                            (productImagesMap[product.id] && productImagesMap[product.id].length > 0)
+                              ? (productImagesMap[product.id][0].altText || product.name)
+                              : product.name
+                          }
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
@@ -325,8 +333,16 @@ export default function Home() {
                     <Card key={product.id} className="p-4 hover:shadow-lg transition">
                       <div className="relative w-full h-40 bg-amber-100 rounded mb-3 overflow-hidden flex items-center justify-center">
                         <img 
-                          src={product.imageUrl || `https://picsum.photos/seed/nuocmam${product.id}/800/800`} 
-                          alt={product.name}
+                          src={
+                            (productImagesMap[product.id] && productImagesMap[product.id].length > 0)
+                              ? productImagesMap[product.id][0].imageUrl
+                              : (product.imageUrl || `https://picsum.photos/seed/nuocmam${product.id}/800/800`)
+                          } 
+                          alt={
+                            (productImagesMap[product.id] && productImagesMap[product.id].length > 0)
+                              ? (productImagesMap[product.id][0].altText || product.name)
+                              : product.name
+                          }
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;

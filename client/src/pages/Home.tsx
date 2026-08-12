@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { ShoppingCart, MapPin, Phone, Mail } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { getPublicBrandConfig, getHeroStyle } from '@/lib/brandAssets';
+import { getPromotionCards } from '@/lib/promotions';
 
 interface CartItem {
   id: number;
@@ -40,27 +41,11 @@ export default function Home() {
     email: '',
     address: '',
   });
-  const [promotions, setPromotions] = useState([
-    {
-      id: 1,
-      title: 'Khuyến Mãi Đặc Biệt',
-      description: 'Giảm 20% cho đơn hàng từ 500.000₫',
-      discount: '20%',
-      backgroundColor: '#C41E3A',
-      textColor: '#D4AF37',
-    },
-    {
-      id: 2,
-      title: 'Mua 2 Tặng 1',
-      description: 'Mua 2 chai nước mắm, tặng 1 chai cùng loại',
-      discount: 'Tặng 1',
-      backgroundColor: '#8B1428',
-      textColor: '#D4AF37',
-    },
-  ]);
+  const { data: promotionsData } = trpc.promotions.list.useQuery();
 
   const { data: products = [] } = trpc.products.list.useQuery();
   const { data: categories = [] } = trpc.categories.list.useQuery();
+  const promotionCards = getPromotionCards(promotionsData as any[] | undefined);
   const { data: brandAssets } = trpc.brand.get.useQuery();
   const publicBrand = getPublicBrandConfig(brandAssets);
   const mascotLogo = publicBrand.mascotLogo;
@@ -223,7 +208,7 @@ export default function Home() {
       <section className="py-12 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {promotions.map((promo) => (
+            {promotionCards.map((promo) => (
               <div
                 key={promo.id}
                 style={{ backgroundColor: promo.backgroundColor }}

@@ -108,6 +108,7 @@ export default function AdminPanel() {
 
 ;
   const createPromotionMutation = trpc.promotions.create.useMutation();
+  const promotionUtils = trpc.useUtils();
 
   useEffect(() => {
     if (productsData) setProducts(productsData);
@@ -242,6 +243,7 @@ export default function AdminPanel() {
         endDate: new Date(newPromotion.endDate),
         description: newPromotion.description || '',
       });
+      await promotionUtils.promotions.list.invalidate();
       setNewPromotion({ code: '', discountPercent: '', startDate: '', endDate: '', description: '' });
       alert('Tạo khuyến mãi thành công!');
     } catch (error) {

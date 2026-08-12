@@ -316,3 +316,12 @@
 - [x] Verify each public consumer mapping: header mascot, footer horizontal logo, document favicon, hero background, and document title
 - [x] Run deterministic mobile, tablet, and desktop responsive checks using the rendered app and layout assertions
 - [x] Save a fresh checkpoint after all evidence-based validation passes
+
+## Phase 27: Dynamic Promotions on Homepage
+- [x] Fetch promotions from `trpc.promotions.list` in Home.tsx
+- [x] Render active promotions only within their start/end dates
+- [x] Add safe fallback cards when no active promotions exist
+- [x] Keep promotion creation in Admin Panel and refresh the list after creation
+- [x] Add Vitest coverage for active promotion filtering and display mapping
+- [x] Run TypeScript, Vitest, build and preview verification
+- [x] Save a new checkpoint after validation

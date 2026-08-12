@@ -274,3 +274,9 @@
 - [x] Dọn dẹp hoàn toàn tài liệu cũ hướng dẫn sai (Manus Secrets)
 - [x] Hoàn thiện file GitHub Actions workflow thực tế trong repository
 - [x] Soạn tài liệu hướng dẫn vận hành chuẩn xác cho người không chuyên
+
+## Phase 22: Cập nhật logo thương hiệu thực tế
+- [ ] Xử lý tài sản nhận diện từ ảnh logo người dùng cung cấp
+- [ ] Thay biểu tượng 🐠 trong header bằng nhận diện Nước Mắm Cá Vàng
+- [ ] Kiểm thử hiển thị logo trên desktop và mobile
+- [ ] Ưu tiên hình ảnh mascot/logo gốc người dùng cung cấp; không dùng bản logo tái tạo bằng AI làm nhận diện chính

@@ -12,6 +12,12 @@ interface AdminState {
   isAuthenticated: boolean;
 }
 
+function formatDateInput(value: unknown) {
+  if (!value) return '';
+  const date = new Date(String(value));
+  return Number.isNaN(date.getTime()) ? '' : date.toISOString().slice(0, 10);
+}
+
 export default function AdminPanel() {
   const [adminState, setAdminState] = useState<AdminState>({
     token: localStorage.getItem('adminToken'),
@@ -34,6 +40,7 @@ export default function AdminPanel() {
   });
 
   const [promotions, setPromotions] = useState<any[]>([]);
+  const [editingPromotion, setEditingPromotion] = useState<any>(null);
   const [newPromotion, setNewPromotion] = useState({
     code: '',
     discountPercent: '',
@@ -41,6 +48,20 @@ export default function AdminPanel() {
     endDate: '',
     description: '',
   });
+  const [blogPosts, setBlogPosts] = useState<any[]>([]);
+  const [editingBlogPost, setEditingBlogPost] = useState<any>(null);
+  const [newBlogPost, setNewBlogPost] = useState({
+    title: '',
+    slug: '',
+    content: '',
+    excerpt: '',
+    imageUrl: '',
+    author: 'Nước Mắm Cá Vàng',
+    category: 'Kiến Thức',
+    isPublished: true,
+  });
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviewFilter, setReviewFilter] = useState<'pending' | 'approved' | 'all'>('pending');
   const [sslLoading, setSslLoading] = useState(false);
   const [sslMessage, setSslMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [editingCategory, setEditingCategory] = useState<any>(null);
@@ -93,7 +114,13 @@ export default function AdminPanel() {
   });
   const { data: promotionsData } = trpc.promotions.list.useQuery(undefined, {
     enabled: adminState.isAuthenticated,
-  })
+  });
+  const { data: blogPostsData } = trpc.blog.getAll.useQuery(undefined, {
+    enabled: adminState.isAuthenticated,
+  });
+  const { data: reviewsData } = trpc.reviews.getAll.useQuery(undefined, {
+    enabled: adminState.isAuthenticated,
+  });
   const createProductMutation = trpc.products.create.useMutation();
   const deleteProductMutation = trpc.products.delete.useMutation();
     const createProductImageMutation = trpc.productImages.upload.useMutation();
@@ -108,6 +135,12 @@ export default function AdminPanel() {
 
 ;
   const createPromotionMutation = trpc.promotions.create.useMutation();
+  const updatePromotionMutation = trpc.promotions.update.useMutation();
+  const deletePromotionMutation = trpc.promotions.delete.useMutation();
+  const createBlogMutation = trpc.blog.create.useMutation();
+  const updateBlogMutation = trpc.blog.update.useMutation();
+  const deleteBlogMutation = trpc.blog.delete.useMutation();
+  const setReviewApprovalMutation = trpc.reviews.setApproval.useMutation();
   const promotionUtils = trpc.useUtils();
 
   useEffect(() => {
@@ -130,6 +163,14 @@ export default function AdminPanel() {
   useEffect(() => {
     if (promotionsData) setPromotions(promotionsData);
   }, [promotionsData]);
+
+  useEffect(() => {
+    if (blogPostsData) setBlogPosts(blogPostsData);
+  }, [blogPostsData]);
+
+  useEffect(() => {
+    if (reviewsData) setReviews(reviewsData);
+  }, [reviewsData]);
 
   useEffect(() => {
     if (sessionIdData?.sessionId) {
@@ -248,6 +289,89 @@ export default function AdminPanel() {
       alert('Tạo khuyến mãi thành công!');
     } catch (error) {
       alert('Lỗi khi tạo khuyến mãi');
+      console.error(error);
+    }
+  };
+
+  const handleUpdatePromotion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingPromotion) return;
+    try {
+      await updatePromotionMutation.mutateAsync({
+        id: editingPromotion.id,
+        code: editingPromotion.code,
+        discountPercent: parseInt(String(editingPromotion.discountPercent)),
+        startDate: new Date(editingPromotion.startDate),
+        endDate: new Date(editingPromotion.endDate),
+        description: editingPromotion.description || '',
+        isActive: Boolean(editingPromotion.isActive),
+      });
+      await promotionUtils.promotions.list.invalidate();
+      setEditingPromotion(null);
+      alert('Cập nhật khuyến mãi thành công!');
+    } catch (error) {
+      alert('Lỗi khi cập nhật khuyến mãi');
+      console.error(error);
+    }
+  };
+
+  const handleDeletePromotion = async (id: number) => {
+    if (!confirm('Bạn có chắc muốn xóa khuyến mãi này?')) return;
+    try {
+      await deletePromotionMutation.mutateAsync(id);
+      await promotionUtils.promotions.list.invalidate();
+      alert('Đã xóa khuyến mãi.');
+    } catch (error) {
+      alert('Lỗi khi xóa khuyến mãi');
+      console.error(error);
+    }
+  };
+
+  const handleSubmitBlog = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newBlogPost.title.trim() || !newBlogPost.slug.trim() || !newBlogPost.content.trim()) {
+      alert('Vui lòng nhập tiêu đề, slug và nội dung bài viết.');
+      return;
+    }
+    try {
+      if (editingBlogPost) {
+        await updateBlogMutation.mutateAsync({ id: editingBlogPost.id, ...newBlogPost });
+        alert('Cập nhật bài viết thành công!');
+      } else {
+        await createBlogMutation.mutateAsync(newBlogPost);
+        alert('Thêm bài viết thành công!');
+      }
+      await promotionUtils.blog.getAll.invalidate();
+      await promotionUtils.blog.list.invalidate();
+      setEditingBlogPost(null);
+      setNewBlogPost({ title: '', slug: '', content: '', excerpt: '', imageUrl: '', author: 'Nước Mắm Cá Vàng', category: 'Kiến Thức', isPublished: true });
+    } catch (error) {
+      alert('Lỗi khi lưu bài viết');
+      console.error(error);
+    }
+  };
+
+  const handleDeleteBlog = async (id: number) => {
+    if (!confirm('Bạn có chắc muốn xóa bài viết này?')) return;
+    try {
+      await deleteBlogMutation.mutateAsync(id);
+      await promotionUtils.blog.getAll.invalidate();
+      await promotionUtils.blog.list.invalidate();
+      alert('Đã xóa bài viết.');
+    } catch (error) {
+      alert('Lỗi khi xóa bài viết');
+      console.error(error);
+    }
+  };
+
+  const handleReviewApproval = async (id: number, isApproved: boolean) => {
+    try {
+      await setReviewApprovalMutation.mutateAsync({ id, isApproved });
+      setReviews((current) => current.map((review) => review.id === id ? { ...review, isApproved } : review));
+      await promotionUtils.reviews.getAll.invalidate();
+      alert(isApproved ? 'Đã duyệt đánh giá.' : 'Đã chuyển đánh giá về trạng thái chờ duyệt.');
+    } catch (error) {
+      alert('Lỗi khi cập nhật trạng thái đánh giá');
       console.error(error);
     }
   };
@@ -1003,48 +1127,60 @@ export default function AdminPanel() {
           {/* Promotions Tab */}
           <TabsContent value="promotions" className="space-y-6">
             <Card className="p-6">
-              <h2 style={{ color: '#C41E3A' }} className="text-2xl font-bold mb-6">🎁 Quản Lý Khuyến Mãi</h2>
-              <form onSubmit={handleCreatePromotion} className="space-y-4 mb-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <h2 style={{ color: '#C41E3A' }} className="text-2xl font-bold mb-2">🎁 Quản Lý Khuyến Mãi</h2>
+              <p className="mb-6 text-sm text-gray-600">Ưu đãi đang trong khoảng ngày hiệu lực sẽ tự động hiển thị trên Trang Chủ.</p>
+              <form onSubmit={editingPromotion ? handleUpdatePromotion : handleCreatePromotion} className="mb-6 space-y-4 rounded border border-amber-200 bg-amber-50 p-4">
+                <h3 className="font-bold">{editingPromotion ? 'Chỉnh Sửa Khuyến Mãi' : 'Tạo Khuyến Mãi Mới'}</h3>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-bold mb-2">Mã Khuyến Mãi</label>
-                    <Input value={newPromotion.code} onChange={(e) => setNewPromotion({...newPromotion, code: e.target.value})} placeholder="VD: SUMMER2024" />
+                    <label className="mb-2 block text-sm font-bold">Mã Khuyến Mãi</label>
+                    <Input value={editingPromotion ? editingPromotion.code : newPromotion.code} onChange={(e) => editingPromotion ? setEditingPromotion({ ...editingPromotion, code: e.target.value }) : setNewPromotion({ ...newPromotion, code: e.target.value })} placeholder="VD: SA-20" />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold mb-2">Giảm Giá (%)</label>
-                    <Input type="number" value={newPromotion.discountPercent} onChange={(e) => setNewPromotion({...newPromotion, discountPercent: e.target.value})} placeholder="10" />
+                    <label className="mb-2 block text-sm font-bold">Giảm Giá (%)</label>
+                    <Input type="number" min="1" max="100" value={editingPromotion ? editingPromotion.discountPercent : newPromotion.discountPercent} onChange={(e) => editingPromotion ? setEditingPromotion({ ...editingPromotion, discountPercent: e.target.value }) : setNewPromotion({ ...newPromotion, discountPercent: e.target.value })} placeholder="20" />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold mb-2">Ngày Bắt Đầu</label>
-                    <Input type="date" value={newPromotion.startDate} onChange={(e) => setNewPromotion({...newPromotion, startDate: e.target.value})} />
+                    <label className="mb-2 block text-sm font-bold">Ngày Bắt Đầu</label>
+                    <Input type="date" value={formatDateInput(editingPromotion ? editingPromotion.startDate : newPromotion.startDate)} onChange={(e) => editingPromotion ? setEditingPromotion({ ...editingPromotion, startDate: e.target.value }) : setNewPromotion({ ...newPromotion, startDate: e.target.value })} />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold mb-2">Ngày Kết Thúc</label>
-                    <Input type="date" value={newPromotion.endDate} onChange={(e) => setNewPromotion({...newPromotion, endDate: e.target.value})} />
+                    <label className="mb-2 block text-sm font-bold">Ngày Kết Thúc</label>
+                    <Input type="date" value={formatDateInput(editingPromotion ? editingPromotion.endDate : newPromotion.endDate)} onChange={(e) => editingPromotion ? setEditingPromotion({ ...editingPromotion, endDate: e.target.value }) : setNewPromotion({ ...newPromotion, endDate: e.target.value })} />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="mb-2 block text-sm font-bold">Mô Tả Hiển Thị</label>
+                    <Input value={editingPromotion ? (editingPromotion.description || '') : newPromotion.description} onChange={(e) => editingPromotion ? setEditingPromotion({ ...editingPromotion, description: e.target.value }) : setNewPromotion({ ...newPromotion, description: e.target.value })} placeholder="Giảm 20% cho đơn từ 500.000đ" />
                   </div>
                 </div>
-                <Button type="submit" style={{ backgroundColor: '#C41E3A' }} className="text-white font-bold">
-                  <Plus size={20} className="mr-2" />
-                  Tạo Khuyến Mãi
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button type="submit" style={{ backgroundColor: '#C41E3A' }} className="font-bold text-white"><Save size={18} className="mr-2" />{editingPromotion ? 'Lưu Thay Đổi' : 'Tạo Khuyến Mãi'}</Button>
+                  {editingPromotion && <Button type="button" variant="outline" onClick={() => setEditingPromotion(null)}>Hủy Chỉnh Sửa</Button>}
+                </div>
               </form>
               <div className="border-t pt-4">
-                <h3 className="font-bold mb-4">Danh Sách Khuyến Mãi</h3>
-                {promotions && promotions.length > 0 ? (
+                <h3 className="mb-4 font-bold">Danh Sách Khuyến Mãi</h3>
+                {promotions.length > 0 ? (
                   <div className="space-y-3">
                     {promotions.map((promo: any) => (
-                      <div key={promo.id} className="border p-4 rounded bg-yellow-50">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div key={promo.id} className="rounded border bg-yellow-50 p-4">
+                        <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
                           <div><p className="text-xs text-gray-500">Mã</p><p className="font-bold">{promo.code}</p></div>
                           <div><p className="text-xs text-gray-500">Giảm Giá</p><p className="font-bold">{promo.discountPercent}%</p></div>
-                          <div><p className="text-xs text-gray-500">Từ</p><p className="font-bold text-sm">{new Date(promo.startDate).toLocaleDateString('vi-VN')}</p></div>
-                          <div><p className="text-xs text-gray-500">Đến</p><p className="font-bold text-sm">{new Date(promo.endDate).toLocaleDateString('vi-VN')}</p></div>
+                          <div><p className="text-xs text-gray-500">Từ</p><p className="text-sm font-bold">{new Date(promo.startDate).toLocaleDateString('vi-VN')}</p></div>
+                          <div><p className="text-xs text-gray-500">Đến</p><p className="text-sm font-bold">{new Date(promo.endDate).toLocaleDateString('vi-VN')}</p></div>
+                          <div><p className="text-xs text-gray-500">Trạng Thái</p><p className={`font-bold ${promo.isActive ? 'text-green-700' : 'text-gray-500'}`}>{promo.isActive ? 'Đang bật' : 'Đã tắt'}</p></div>
+                        </div>
+                        <p className="mt-3 text-sm text-gray-700">{promo.description || `Nhập mã ${promo.code} để nhận ưu đãi ${promo.discountPercent}%`}</p>
+                        <div className="mt-3 flex gap-2">
+                          <Button size="sm" variant="outline" onClick={() => setEditingPromotion({ ...promo })}><Edit2 size={15} className="mr-1" /> Sửa</Button>
+                          <Button size="sm" variant="outline" className="text-red-600" onClick={() => handleDeletePromotion(promo.id)}><Trash2 size={15} className="mr-1" /> Xóa</Button>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-500 text-center py-8">Chưa có khuyến mãi nào</p>
+                  <p className="py-8 text-center text-gray-500">Chưa có khuyến mãi nào. Hãy tạo ưu đãi đầu tiên.</p>
                 )}
               </div>
             </Card>
@@ -1237,51 +1373,49 @@ export default function AdminPanel() {
           {/* Blog Management Tab */}
           <TabsContent value="blog" className="space-y-6">
             <Card className="p-6">
-              <h3 className="text-xl font-bold mb-4" style={{ color: '#C41E3A' }}>Quản Lý Bài Viết</h3>
-              <form className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+              <h3 className="mb-2 text-xl font-bold" style={{ color: '#C41E3A' }}>Quản Lý Bài Viết</h3>
+              <p className="mb-5 text-sm text-gray-600">Bài viết được bật xuất bản sẽ xuất hiện tại <strong>/blog</strong> trên website công khai.</p>
+              <form onSubmit={handleSubmitBlog} className="space-y-4 rounded border border-amber-200 bg-amber-50 p-4">
+                <h4 className="font-bold">{editingBlogPost ? 'Chỉnh Sửa Bài Viết' : 'Thêm Bài Viết Mới'}</h4>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-bold mb-2">Tiêu Đề</label>
-                    <Input placeholder="Tiêu đề bài viết" />
+                    <label className="mb-2 block text-sm font-bold">Tiêu Đề *</label>
+                    <Input value={newBlogPost.title} onChange={(e) => setNewBlogPost({ ...newBlogPost, title: e.target.value })} placeholder="Tiêu đề bài viết" />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold mb-2">Slug</label>
-                    <Input placeholder="slug-bai-viet" />
+                    <label className="mb-2 block text-sm font-bold">Slug *</label>
+                    <Input value={newBlogPost.slug} onChange={(e) => setNewBlogPost({ ...newBlogPost, slug: e.target.value })} placeholder="slug-bai-viet" />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-bold">Danh Mục</label>
+                    <Input value={newBlogPost.category} onChange={(e) => setNewBlogPost({ ...newBlogPost, category: e.target.value })} placeholder="Kiến Thức" />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-bold">Tác Giả</label>
+                    <Input value={newBlogPost.author} onChange={(e) => setNewBlogPost({ ...newBlogPost, author: e.target.value })} placeholder="Nước Mắm Cá Vàng" />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="mb-2 block text-sm font-bold">Ảnh đại diện URL (tùy chọn)</label>
+                    <Input value={newBlogPost.imageUrl} onChange={(e) => setNewBlogPost({ ...newBlogPost, imageUrl: e.target.value })} placeholder="/manus-storage/..." />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="mb-2 block text-sm font-bold">Tóm Tắt</label>
+                    <textarea value={newBlogPost.excerpt} onChange={(e) => setNewBlogPost({ ...newBlogPost, excerpt: e.target.value })} className="w-full rounded border p-2" rows={2} placeholder="Tóm tắt ngắn cho thẻ bài viết" />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="mb-2 block text-sm font-bold">Nội Dung *</label>
+                    <textarea value={newBlogPost.content} onChange={(e) => setNewBlogPost({ ...newBlogPost, content: e.target.value })} className="w-full rounded border p-2" rows={8} placeholder="Nội dung bài viết..." />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-bold mb-2">Nội Dung</label>
-                  <textarea className="w-full p-2 border rounded" rows={6} placeholder="Nội dung bài viết..."></textarea>
+                <label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={newBlogPost.isPublished} onChange={(e) => setNewBlogPost({ ...newBlogPost, isPublished: e.target.checked })} /> Xuất bản ngay trên website</label>
+                <div className="flex flex-wrap gap-2">
+                  <Button type="submit" style={{ backgroundColor: '#C41E3A' }} className="font-bold text-white"><Save size={18} className="mr-2" />{editingBlogPost ? 'Lưu Thay Đổi' : 'Thêm Bài Viết'}</Button>
+                  {editingBlogPost && <Button type="button" variant="outline" onClick={() => { setEditingBlogPost(null); setNewBlogPost({ title: '', slug: '', content: '', excerpt: '', imageUrl: '', author: 'Nước Mắm Cá Vàng', category: 'Kiến Thức', isPublished: true }); }}>Hủy Chỉnh Sửa</Button>}
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-bold mb-2">Danh Mục</label>
-                    <Input placeholder="Kiến Thức, Công Thức, Lịch Sử..." />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold mb-2">Tác Giả</label>
-                    <Input placeholder="Nước Mắm Cá Vàng" />
-                  </div>
-                </div>
-                <Button style={{ backgroundColor: '#C41E3A' }} className="text-white font-bold">
-                  <Plus size={20} className="mr-2" />
-                  Thêm Bài Viết Mới
-                </Button>
               </form>
               <div className="mt-6">
-                <h4 className="font-bold mb-3">Danh Sách Bài Viết</h4>
-                <div className="space-y-2">
-                  <div className="p-3 bg-gray-50 rounded flex justify-between items-center">
-                    <div>
-                      <p className="font-semibold">Hướng Dẫn Chọn Nước Mắm Quốn</p>
-                      <p className="text-sm text-gray-600">Danh mục: Kiến Thức</p>
-                    </div>
-                    <div className="space-x-2">
-                      <Button size="sm" variant="outline"><Edit2 size={16} /></Button>
-                      <Button size="sm" variant="outline" className="text-red-600"><Trash2 size={16} /></Button>
-                    </div>
-                  </div>
-                </div>
+                <h4 className="mb-3 font-bold">Danh Sách Bài Viết</h4>
+                {blogPosts.length === 0 ? <p className="rounded bg-gray-50 p-6 text-center text-gray-500">Chưa có bài viết nào.</p> : <div className="space-y-3">{blogPosts.map((post) => <div key={post.id} className="rounded border p-4"><div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between"><div><p className="font-semibold text-[#8B1428]">{post.title}</p><p className="text-sm text-gray-600">/{post.slug} · {post.category} · {post.isPublished ? 'Đã xuất bản' : 'Bản nháp'}</p><p className="mt-1 line-clamp-2 text-sm text-gray-600">{post.excerpt || post.content}</p></div><div className="flex gap-2"><Button size="sm" variant="outline" onClick={() => { setEditingBlogPost(post); setNewBlogPost({ title: post.title, slug: post.slug, content: post.content, excerpt: post.excerpt || '', imageUrl: post.imageUrl || '', author: post.author || 'Nước Mắm Cá Vàng', category: post.category || 'Kiến Thức', isPublished: Boolean(post.isPublished) }); }}><Edit2 size={15} /></Button><Button size="sm" variant="outline" className="text-red-600" onClick={() => handleDeleteBlog(post.id)}><Trash2 size={15} /></Button></div></div></div>)}</div>}
               </div>
             </Card>
           </TabsContent>
@@ -1289,30 +1423,13 @@ export default function AdminPanel() {
           {/* Reviews Management Tab */}
           <TabsContent value="reviews" className="space-y-6">
             <Card className="p-6">
-              <h3 className="text-xl font-bold mb-4" style={{ color: '#C41E3A' }}>Quản Lý Đánh Giá Sản Phẩm</h3>
-              <div className="space-y-4">
-                <div className="flex gap-2 mb-4">
-                  <Button style={{ backgroundColor: '#C41E3A' }} className="text-white font-bold">Chờ Duyệt</Button>
-                  <Button variant="outline">Đã Duyệt</Button>
-                  <Button variant="outline">Từ Chối</Button>
-                </div>
-                <div className="space-y-3">
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <p className="font-bold">Sản phẩm rất tốt!</p>
-                        <p className="text-sm text-gray-600">Người dùng: Nguyễn Văn A</p>
-                        <p className="text-sm text-gray-600">Sản phẩm: Cá Lục Premium</p>
-                      </div>
-                      <div className="text-yellow-500 font-bold">★★★★★</div>
-                    </div>
-                    <p className="text-sm mb-3">Mắm rất ngon, chất lượng cao, giao hàng nhanh. Rất hài lòng!</p>
-                    <div className="flex gap-2">
-                      <Button size="sm" style={{ backgroundColor: '#C41E3A' }} className="text-white">Duyệt</Button>
-                      <Button size="sm" variant="outline" className="text-red-600">Từ Chối</Button>
-                    </div>
-                  </div>
-                </div>
+              <h3 className="mb-2 text-xl font-bold" style={{ color: '#C41E3A' }}>Quản Lý Đánh Giá Sản Phẩm</h3>
+              <p className="mb-5 text-sm text-gray-600">Chỉ đánh giá được duyệt mới xuất hiện công khai trên trang chi tiết sản phẩm.</p>
+              <div className="mb-5 flex flex-wrap gap-2">
+                {(['pending', 'approved', 'all'] as const).map((filter) => <Button key={filter} type="button" onClick={() => setReviewFilter(filter)} variant={reviewFilter === filter ? 'default' : 'outline'} style={reviewFilter === filter ? { backgroundColor: '#C41E3A' } : undefined} className={reviewFilter === filter ? 'text-white' : ''}>{filter === 'pending' ? 'Chờ Duyệt' : filter === 'approved' ? 'Đã Duyệt' : 'Tất Cả'}</Button>)}
+              </div>
+              <div className="space-y-3">
+                {reviews.filter((review) => reviewFilter === 'all' || (reviewFilter === 'approved' ? review.isApproved : !review.isApproved)).length === 0 ? <p className="rounded bg-gray-50 p-6 text-center text-gray-500">Chưa có đánh giá trong trạng thái này.</p> : reviews.filter((review) => reviewFilter === 'all' || (reviewFilter === 'approved' ? review.isApproved : !review.isApproved)).map((review) => <div key={review.id} className="rounded-lg border p-4"><div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between"><div><p className="font-bold">{review.title}</p><p className="text-sm text-gray-600">Người gửi: {review.customerName} · Sản phẩm ID: {review.productId}</p><div className="text-[#D4AF37]" aria-label={`${review.rating} trên 5 sao`}>{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</div></div><p className="text-xs text-gray-500">{new Date(review.createdAt).toLocaleDateString('vi-VN')}</p></div><p className="mt-3 text-sm leading-6 text-gray-700">{review.content}</p><div className="mt-3 flex gap-2">{!review.isApproved && <Button size="sm" style={{ backgroundColor: '#C41E3A' }} className="text-white" onClick={() => handleReviewApproval(review.id, true)}>Duyệt</Button>}{review.isApproved && <Button size="sm" variant="outline" onClick={() => handleReviewApproval(review.id, false)}>Gỡ duyệt</Button>}</div></div>)}
               </div>
             </Card>
           </TabsContent>

@@ -164,6 +164,7 @@ export default function Home() {
             <a href="#home" className="hover:opacity-80">Trang Chủ</a>
             <a href="#products" className="hover:opacity-80">Sản Phẩm</a>
             <a href="/about" className="hover:opacity-80">Về Chúng Tôi</a>
+            <a href="/blog" className="hover:opacity-80">Bài Viết</a>
             <a href="#contact" className="hover:opacity-80">Liên Hệ</a>
           </nav>
           <div className="flex gap-3 items-center">

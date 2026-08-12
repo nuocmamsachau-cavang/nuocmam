@@ -5,7 +5,7 @@ import { publicProcedure, router } from "./_core/trpc";
 import { notifyOwner } from "./_core/notification";
 import { storagePut } from "./storage";
 import { z } from "zod";
-import { getCategories, getCategoryById, getAllProducts, getProductById, updateProduct, deleteProduct, createProduct, getSeoMetadata, createOrder, getOrders, getAdminByUsername, getDb, getPromotions, createPromotion, getEmailConfig, saveEmailConfig, getBlogPosts, getBlogPostBySlug, createBlogPost, getAllBlogPosts, getProductReviews, getApprovedReviews, createProductReview, getAllProductReviews, approveProductReview, getProductImages, getProductImageById, getBrandAssets, updateBrandAsset, createProductImage, updateProductImage, deleteProductImage, getSessionId, setSessionId, getLastDeploymentTime, setLastDeploymentTime } from "./db";
+import { getCategories, getCategoryById, getAllProducts, getProductById, updateProduct, deleteProduct, createProduct, getSeoMetadata, createOrder, getOrders, getAdminByUsername, getDb, getPromotions, createPromotion, updatePromotion, deletePromotion, getEmailConfig, saveEmailConfig, getBlogPosts, getBlogPostBySlug, createBlogPost, updateBlogPost, deleteBlogPost, getAllBlogPosts, getProductReviews, getApprovedReviews, createProductReview, getAllProductReviews, approveProductReview, setProductReviewApproval, getProductImages, getProductImageById, getBrandAssets, updateBrandAsset, createProductImage, updateProductImage, deleteProductImage, getSessionId, setSessionId, getLastDeploymentTime, setLastDeploymentTime } from "./db";
 import { hashPassword, verifyPassword, generateAdminToken } from "./auth";
 import { categories, products, seoMetadata, orders, adminUsers, promotions, emailConfig, blogPosts, productReviews, productImages } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
@@ -169,26 +169,44 @@ export const appRouter = router({
   // Promotions
   promotions: router({
     list: publicProcedure.query(() => getPromotions()),
-    create: publicProcedure
-      .input(z.object({
-        code: z.string(),
-        discountPercent: z.number(),
-        startDate: z.date(),
-        endDate: z.date(),
-        description: z.string().optional(),
-        maxUsage: z.number().optional(),
-      }))
-      .mutation(async ({ input }) => {
-        return createPromotion({
-          code: input.code,
-          discountPercent: input.discountPercent,
-          startDate: input.startDate,
-          endDate: input.endDate,
-          description: input.description,
-          maxUsage: input.maxUsage,
-          isActive: true,
-        });
-      }),
+      create: publicProcedure
+        .input(z.object({
+          code: z.string().min(1),
+          discountPercent: z.number().int().min(1).max(100),
+          startDate: z.date(),
+          endDate: z.date(),
+          description: z.string().optional(),
+          maxUsage: z.number().int().positive().optional(),
+        }))
+        .mutation(async ({ input }) => {
+          return createPromotion({
+            code: input.code,
+            discountPercent: input.discountPercent,
+            startDate: input.startDate,
+            endDate: input.endDate,
+            description: input.description,
+            maxUsage: input.maxUsage,
+            isActive: true,
+          });
+        }),
+      update: publicProcedure
+        .input(z.object({
+          id: z.number(),
+          code: z.string().min(1).optional(),
+          discountPercent: z.number().int().min(1).max(100).optional(),
+          startDate: z.date().optional(),
+          endDate: z.date().optional(),
+          description: z.string().optional(),
+          maxUsage: z.number().int().positive().nullable().optional(),
+          isActive: z.boolean().optional(),
+        }))
+        .mutation(async ({ input }) => {
+          const { id, ...changes } = input;
+          return updatePromotion(id, changes);
+        }),
+      delete: publicProcedure
+        .input(z.number())
+        .mutation(({ input }) => deletePromotion(input)),
   }),
 
   // Email Configuration
@@ -242,21 +260,40 @@ export const appRouter = router({
   blog: router({
     list: publicProcedure.query(() => getBlogPosts()),
     getBySlug: publicProcedure.input(z.string()).query(({ input }) => getBlogPostBySlug(input)),
-    create: publicProcedure
-      .input(z.object({
-        title: z.string(),
-        slug: z.string(),
-        content: z.string(),
-        excerpt: z.string().optional(),
-        imageUrl: z.string().optional(),
-        imageKey: z.string().optional(),
-        author: z.string().optional(),
-        category: z.string().optional(),
-      }))
-      .mutation(async ({ input }) => {
-        return createBlogPost(input);
-      }),
-    getAll: publicProcedure.query(() => getAllBlogPosts()),
+      create: publicProcedure
+        .input(z.object({
+          title: z.string().min(1),
+          slug: z.string().min(1),
+          content: z.string().min(1),
+          excerpt: z.string().optional(),
+          imageUrl: z.string().optional(),
+          imageKey: z.string().optional(),
+          author: z.string().optional(),
+          category: z.string().optional(),
+          isPublished: z.boolean().optional(),
+        }))
+        .mutation(async ({ input }) => {
+          return createBlogPost({ ...input, isPublished: input.isPublished ?? true });
+        }),
+      update: publicProcedure
+        .input(z.object({
+          id: z.number(),
+          title: z.string().min(1).optional(),
+          slug: z.string().min(1).optional(),
+          content: z.string().min(1).optional(),
+          excerpt: z.string().optional(),
+          imageUrl: z.string().optional(),
+          imageKey: z.string().optional(),
+          author: z.string().optional(),
+          category: z.string().optional(),
+          isPublished: z.boolean().optional(),
+        }))
+        .mutation(async ({ input }) => {
+          const { id, ...changes } = input;
+          return updateBlogPost(id, changes);
+        }),
+      delete: publicProcedure.input(z.number()).mutation(({ input }) => deleteBlogPost(input)),
+      getAll: publicProcedure.query(() => getAllBlogPosts()),
   }),
 
   // Domain Management
@@ -314,6 +351,9 @@ export const appRouter = router({
       }),
     getAll: publicProcedure.query(() => getAllProductReviews()),
     approve: publicProcedure.input(z.number()).mutation(({ input }) => approveProductReview(input)),
+    setApproval: publicProcedure
+      .input(z.object({ id: z.number(), isApproved: z.boolean() }))
+      .mutation(({ input }) => setProductReviewApproval(input.id, input.isApproved)),
   }),
 
   // Product Images

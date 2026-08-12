@@ -13,6 +13,8 @@ import AdminPanel from "./pages/AdminPanel";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import DomainManagement from "./pages/DomainManagement";
 import ProductDetail from "./pages/ProductDetail";
+import Blog from "./pages/Blog";
+import BlogPostDetail from "./pages/BlogPostDetail";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -21,6 +23,8 @@ function Router() {
       <Route path={"/"} component={Home} />
       <Route path={"/about"} component={About} />
       <Route path={"/product/:id"} component={ProductDetail} />
+      <Route path={"/blog/:slug"} component={BlogPostDetail} />
+      <Route path={"/blog"} component={Blog} />
       <Route path={"/admin"} component={AdminPanel} />
       <Route path={"/order-confirmation"} component={OrderConfirmation} />
       <Route path={"/admin/domain"} component={DomainManagement} />

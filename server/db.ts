@@ -1,4 +1,4 @@
-import { eq, desc, asc, sql, like } from "drizzle-orm";
+import { eq, and, desc, asc, sql, like } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, categories, products, seoMetadata, orders, adminUsers, promotions, emailConfig, blogPosts, productReviews, productImages, ProductImage, websiteSettings, WebsiteSetting } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -170,6 +170,18 @@ export async function createPromotion(promo: any) {
   return db.insert(promotions).values(promo);
 }
 
+export async function updatePromotion(id: number, promo: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(promotions).set(promo).where(eq(promotions.id, id));
+}
+
+export async function deletePromotion(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.delete(promotions).where(eq(promotions.id, id));
+}
+
 export async function getPromotionByCode(code: string) {
   const db = await getDb();
   if (!db) return null;
@@ -211,7 +223,7 @@ export async function getBlogPostBySlug(slug: string) {
   const db = await getDb();
   if (!db) return null;
   const result = await db.select().from(blogPosts)
-    .where(eq(blogPosts.slug, slug))
+    .where(and(eq(blogPosts.slug, slug), eq(blogPosts.isPublished, true)))
     .limit(1);
   return result.length > 0 ? result[0] : null;
 }
@@ -220,6 +232,18 @@ export async function createBlogPost(post: any) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return db.insert(blogPosts).values(post);
+}
+
+export async function updateBlogPost(id: number, post: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(blogPosts).set(post).where(eq(blogPosts.id, id));
+}
+
+export async function deleteBlogPost(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.delete(blogPosts).where(eq(blogPosts.id, id));
 }
 
 export async function getAllBlogPosts() {
@@ -241,7 +265,7 @@ export async function getApprovedReviews(productId: number) {
   const db = await getDb();
   if (!db) return [];
   return db.select().from(productReviews)
-    .where(eq(productReviews.productId, productId))
+    .where(and(eq(productReviews.productId, productId), eq(productReviews.isApproved, true)))
     .orderBy(desc(productReviews.createdAt));
 }
 
@@ -261,6 +285,12 @@ export async function approveProductReview(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return db.update(productReviews).set({ isApproved: true }).where(eq(productReviews.id, id));
+}
+
+export async function setProductReviewApproval(id: number, isApproved: boolean) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(productReviews).set({ isApproved }).where(eq(productReviews.id, id));
 }
 
 // Product Images Queries

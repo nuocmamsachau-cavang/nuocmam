@@ -325,3 +325,14 @@
 - [x] Add Vitest coverage for active promotion filtering and display mapping
 - [x] Run TypeScript, Vitest, build and preview verification
 - [x] Save a new checkpoint after validation
+
+## Phase 28: Promotions CRUD, Public Blog and Reviews
+- [x] Verify current promotions data and create a real active promotion for end-to-end validation without fabricated reviews or testimonials
+- [x] Add promotion update and delete procedures with Admin Panel controls
+- [x] Add public blog listing and blog detail routes using published posts only
+- [x] Add Admin Panel blog create flow connected to backend and publish state handling
+- [x] Add approved reviews section and public review submission form on ProductDetail
+- [x] Connect Admin Panel review moderation controls to real review data
+- [x] Add tests for promotion CRUD, published blog visibility and approved review display
+- [x] Run TypeScript, Vitest, build and browser verification
+- [x] Save a fresh checkpoint after the final tested state

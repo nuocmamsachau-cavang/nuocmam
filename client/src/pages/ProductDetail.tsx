@@ -3,7 +3,8 @@ import { useRoute, useLocation } from 'wouter';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ShoppingCart, X, CheckCircle, ShieldCheck, Truck, Award } from 'lucide-react';
+import { filterApprovedReviews } from '@/lib/publicContent';
+import { ShoppingCart, X, CheckCircle, ShieldCheck, Truck, Award, Star, MessageSquare, Send } from 'lucide-react';
 
 interface CartItem {
   id: number;
@@ -20,16 +21,58 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(true);
+  const [reviewForm, setReviewForm] = useState({ customerName: '', customerEmail: '', rating: 5, title: '', content: '' });
+  const [reviewNotice, setReviewNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const { data: product } = trpc.products.getById.useQuery(productId, {
+  const { data: product, isLoading: productLoading } = trpc.products.getById.useQuery(productId, {
     enabled: productId > 0,
   });
 
   const { data: productImages = [] } = trpc.productImages.getByProductId.useQuery(productId, {
     enabled: productId > 0,
   });
+  const { data: approvedReviewsData = [] } = trpc.reviews.getApproved.useQuery(productId, {
+    enabled: productId > 0,
+  });
+  const approvedReviews = filterApprovedReviews(approvedReviewsData);
+  const reviewUtils = trpc.useUtils();
+  const createReviewMutation = trpc.reviews.create.useMutation();
 
   const sortedImages = productImages.sort((a, b) => a.displayOrder - b.displayOrder);
+
+  const handleReviewSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setReviewNotice(null);
+    if (!reviewForm.customerName.trim() || !reviewForm.title.trim() || !reviewForm.content.trim()) {
+      setReviewNotice({ type: 'error', text: 'Vui lòng nhập tên, tiêu đề và nội dung đánh giá.' });
+      return;
+    }
+
+    try {
+      await createReviewMutation.mutateAsync({
+        productId,
+        customerName: reviewForm.customerName.trim(),
+        customerEmail: reviewForm.customerEmail.trim() || undefined,
+        rating: reviewForm.rating,
+        title: reviewForm.title.trim(),
+        content: reviewForm.content.trim(),
+      });
+      await reviewUtils.reviews.getApproved.invalidate(productId);
+      setReviewForm({ customerName: '', customerEmail: '', rating: 5, title: '', content: '' });
+      setReviewNotice({ type: 'success', text: 'Đã gửi đánh giá. Nội dung sẽ hiển thị sau khi được duyệt.' });
+    } catch (error) {
+      console.error('Review submission failed:', error);
+      setReviewNotice({ type: 'error', text: 'Không thể gửi đánh giá lúc này. Vui lòng thử lại.' });
+    }
+  };
+
+  if (productLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <p className="text-center text-gray-500">Đang tải thông tin sản phẩm...</p>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -258,6 +301,52 @@ export default function ProductDetail() {
                     </div>
                   </Card>
                 )}
+
+                {/* Approved Reviews and Public Submission */}
+                <Card className="p-5 border-amber-200 bg-white">
+                  <h3 className="mb-4 flex items-center gap-2 font-bold text-amber-900"><MessageSquare size={18} /> Đánh Giá Sản Phẩm</h3>
+                  <div className="space-y-3">
+                    {approvedReviews.length === 0 ? (
+                      <p className="rounded bg-gray-50 p-4 text-sm text-gray-600">Chưa có đánh giá được duyệt cho sản phẩm này.</p>
+                    ) : (
+                      approvedReviews.map((review) => (
+                        <div key={review.id} className="rounded border border-gray-200 p-4">
+                          <div className="flex flex-wrap items-start justify-between gap-2">
+                            <div>
+                              <p className="font-bold text-gray-900">{review.title}</p>
+                              <p className="text-sm text-gray-500">{review.customerName}</p>
+                            </div>
+                            <div className="flex text-[#D4AF37]" aria-label={`${review.rating} trên 5 sao`}>
+                              {Array.from({ length: 5 }, (_, index) => <Star key={index} size={15} fill={index < review.rating ? 'currentColor' : 'none'} />)}
+                            </div>
+                          </div>
+                          <p className="mt-3 text-sm leading-6 text-gray-700">{review.content}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  <form onSubmit={handleReviewSubmit} className="mt-6 space-y-3 border-t pt-5">
+                    <h4 className="font-semibold text-[#8B1428]">Chia sẻ trải nghiệm của bạn</h4>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <input className="rounded border p-2 text-sm" placeholder="Tên của bạn *" value={reviewForm.customerName} onChange={(event) => setReviewForm({ ...reviewForm, customerName: event.target.value })} />
+                      <input className="rounded border p-2 text-sm" type="email" placeholder="Email (không bắt buộc)" value={reviewForm.customerEmail} onChange={(event) => setReviewForm({ ...reviewForm, customerEmail: event.target.value })} />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-semibold">Số sao</label>
+                      <div className="flex gap-1">
+                        {Array.from({ length: 5 }, (_, index) => {
+                          const rating = index + 1;
+                          return <button key={rating} type="button" aria-label={`${rating} sao`} onClick={() => setReviewForm({ ...reviewForm, rating })} className="text-[#D4AF37]"><Star size={20} fill={rating <= reviewForm.rating ? 'currentColor' : 'none'} /></button>;
+                        })}
+                      </div>
+                    </div>
+                    <input className="w-full rounded border p-2 text-sm" placeholder="Tiêu đề đánh giá *" value={reviewForm.title} onChange={(event) => setReviewForm({ ...reviewForm, title: event.target.value })} />
+                    <textarea className="w-full rounded border p-2 text-sm" rows={4} placeholder="Nội dung đánh giá *" value={reviewForm.content} onChange={(event) => setReviewForm({ ...reviewForm, content: event.target.value })} />
+                    {reviewNotice && <p className={`rounded p-3 text-sm ${reviewNotice.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>{reviewNotice.text}</p>}
+                    <Button type="submit" disabled={createReviewMutation.isPending} style={{ backgroundColor: '#C41E3A' }} className="text-white"><Send size={16} className="mr-2" />{createReviewMutation.isPending ? 'Đang gửi...' : 'Gửi đánh giá'}</Button>
+                  </form>
+                </Card>
               </div>
             </div>
           </div>

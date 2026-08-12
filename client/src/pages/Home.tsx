@@ -270,11 +270,11 @@ export default function Home() {
       <section
         id="home"
         style={getHeroStyle(heroBanner)}
-        className="text-white py-20 text-center min-h-[360px] flex flex-col items-center justify-center"
+        className="min-h-[280px] px-4 py-12 text-center text-white sm:min-h-[300px] sm:py-14 flex flex-col items-center justify-center"
       >
-        <h1 className="text-5xl font-bold mb-4">Nước Mắm Cá Vàng</h1>
-        <p className="text-2xl mb-4" style={{ color: '#D4AF37' }}>Tinh Túy Làng Nghề Sa Châu 200 Năm</p>
-        <p className="text-lg mb-8 max-w-2xl mx-auto">Nước mắm truyền thống nguyên chất, kết tinh từ nắng gió biển cả và tâm huyết của những nghệ nhân giữ lửa làng nghề hơn 2 thế kỷ.</p>
+        <h1 className="mb-3 text-4xl font-bold md:text-5xl">Nước Mắm Cá Vàng</h1>
+        <p className="mb-3 text-xl md:text-2xl" style={{ color: '#D4AF37' }}>Tinh Túy Làng Nghề Sa Châu 200 Năm</p>
+        <p className="mx-auto mb-6 max-w-2xl text-base md:text-lg">Nước mắm truyền thống nguyên chất, kết tinh từ nắng gió biển cả và tâm huyết của những nghệ nhân giữ lửa làng nghề hơn 2 thế kỷ.</p>
         <Button
           onClick={() => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })}
           style={{ backgroundColor: '#D4AF37', color: '#C41E3A' }}
@@ -285,21 +285,21 @@ export default function Home() {
       </section>
 
       {/* Promotion Section */}
-      <section className="py-12 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <section className="px-4 py-6 sm:py-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
             {promotionCards.map((promo) => (
               <div
                 key={promo.id}
                 style={{ backgroundColor: promo.backgroundColor }}
-                className="rounded-lg p-8 text-white shadow-lg hover:shadow-xl transition transform hover:scale-105"
+                className="rounded-lg p-5 text-white shadow-lg transition hover:scale-[1.02] hover:shadow-xl md:p-6"
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 style={{ color: promo.textColor }} className="text-2xl font-bold mb-2">
+                    <h3 style={{ color: promo.textColor }} className="mb-1 text-xl font-bold md:text-2xl">
                       {promo.title}
                     </h3>
-                    <p className="text-white mb-4">{promo.description}</p>
+                    <p className="mb-3 text-sm text-white md:text-base">{promo.description}</p>
                     <Button
                       onClick={() => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })}
                       style={{ backgroundColor: promo.textColor, color: promo.backgroundColor }}
@@ -310,7 +310,7 @@ export default function Home() {
                   </div>
                   <div
                     style={{ color: promo.textColor }}
-                    className="text-5xl font-bold"
+                    className="text-4xl font-bold md:text-5xl"
                   >
                     {promo.discount}
                   </div>
@@ -321,29 +321,14 @@ export default function Home() {
         </div>
       </section>
 
-      {/* About Brief */}
-      <section className="py-16 px-4 bg-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 style={{ color: '#C41E3A' }} className="text-3xl font-bold mb-6 border-b-4 border-yellow-600 pb-3 inline-block">
-            Hơn 200 Năm Gìn Giữ Hương Vị Việt
-          </h2>
-          <p className="text-lg mb-4">
-            Nước Mắm Cá Vàng được sản xuất tại <strong>Làng Sa Châu, Giao Hưng, Nam Định</strong> - nơi có truyền thống làm mắm lâu đời từ thời cha ông. Chúng tôi tự hào mang đến dòng nước mắm chắt nguyên chất, được ủ chượp tự nhiên từ 12-24 tháng, không hóa chất, không chất bảo quản.
-          </p>
-          <p className="text-lg">
-            Mỗi giọt nước mắm là sự kết hợp hoàn hảo giữa cá tươi và muối biển tinh khiết, được phơi nắng, đánh đảo kỹ lưỡng để tạo nên màu cánh gián đặc trưng và vị ngọt hậu sâu sắc.
-          </p>
-        </div>
-      </section>
-
       {/* Products Section */}
-      <section id="products" className="px-4 py-16">
+      <section id="products" className="scroll-mt-20 px-4 py-10 sm:py-12">
         <div className="mx-auto max-w-7xl">
-          <h2 style={{ color: '#C41E3A' }} className="mb-8 inline-block w-full border-b-4 border-yellow-600 pb-3 text-center text-3xl font-bold">
+          <h2 style={{ color: '#C41E3A' }} className="mb-6 inline-block w-full border-b-4 border-yellow-600 pb-3 text-center text-3xl font-bold">
             Danh Mục Sản Phẩm Truyền Thống
           </h2>
 
-          <div className="mb-10 rounded-2xl border border-amber-200 bg-white p-4 shadow-sm sm:p-6">
+          <div className="mb-8 rounded-2xl border border-amber-200 bg-white p-4 shadow-sm sm:p-6">
             <div className="mb-4 flex items-center gap-2 font-bold text-[#8B1428]">
               <SlidersHorizontal size={20} /> Tìm sản phẩm phù hợp
             </div>
@@ -433,6 +418,21 @@ export default function Home() {
               })}
             </>
           )}
+        </div>
+      </section>
+
+      {/* About Brief */}
+      <section className="bg-white px-4 py-8 sm:py-10">
+        <div className="mx-auto max-w-5xl text-center">
+          <h2 style={{ color: '#C41E3A' }} className="mb-4 inline-block border-b-4 border-yellow-600 pb-2 text-2xl font-bold md:text-3xl">
+            Hơn 200 Năm Gìn Giữ Hương Vị Việt
+          </h2>
+          <p className="mb-3 text-base md:text-lg">
+            Nước Mắm Cá Vàng được sản xuất tại <strong>Làng Sa Châu, Giao Hưng, Nam Định</strong> - nơi có truyền thống làm mắm lâu đời từ thời cha ông. Chúng tôi tự hào mang đến dòng nước mắm chắt nguyên chất, được ủ chượp tự nhiên từ 12-24 tháng, không hóa chất, không chất bảo quản.
+          </p>
+          <p className="text-base md:text-lg">
+            Mỗi giọt nước mắm là sự kết hợp hoàn hảo giữa cá tươi và muối biển tinh khiết, được phơi nắng, đánh đảo kỹ lưỡng để tạo nên màu cánh gián đặc trưng và vị ngọt hậu sâu sắc.
+          </p>
         </div>
       </section>
 

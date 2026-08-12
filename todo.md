@@ -374,3 +374,9 @@
 - [x] Add tests for product sorting and order status filtering
 - [x] Run TypeScript, Vitest, build and responsive browser verification
 - [x] Save a new checkpoint after both features are validated
+
+## Phase 34: Homepage Product Visibility Optimization
+- [x] Inspect preview spacing and hero/promotion height causing products to appear too low
+- [x] Reduce non-essential vertical space while preserving brand messaging and promotions
+- [x] Verify product section visibility on desktop and mobile
+- [x] Run tests and production build, then save a checkpoint

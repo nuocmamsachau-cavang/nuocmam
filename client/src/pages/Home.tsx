@@ -60,6 +60,8 @@ export default function Home() {
 
   const { data: products = [] } = trpc.products.list.useQuery();
   const { data: categories = [] } = trpc.categories.list.useQuery();
+  const { data: brandAssets } = trpc.brand.get.useQuery();
+  const mascotLogo = brandAssets?.brand_mascot_logo || "/manus-storage/nuoc-mam-ca-vang-mascot_834f1187.jpg";
   const [productImagesMap, setProductImagesMap] = useState<Record<number, any>>({});
   const [, setLocation] = useLocation();
 
@@ -162,7 +164,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3 text-2xl font-bold">
             <img
-              src="/manus-storage/nuoc-mam-ca-vang-mascot_834f1187.jpg"
+              src={mascotLogo}
               alt="Logo Nước Mắm Cá Vàng Sa Châu"
               className="h-11 w-11 rounded-full object-cover object-center ring-2 ring-[#D4AF37] shadow-md"
               loading="eager"

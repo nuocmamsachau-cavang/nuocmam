@@ -1,4 +1,4 @@
-import { eq, desc, asc } from "drizzle-orm";
+import { eq, desc, asc, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, categories, products, seoMetadata, orders, adminUsers, promotions, emailConfig, blogPosts, productReviews, productImages, ProductImage, websiteSettings, WebsiteSetting } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -394,4 +394,27 @@ export async function getLastDeploymentTime() {
 
 export async function setLastDeploymentTime() {
   return setWebsiteSetting('lastDeploymentTime', new Date().toISOString(), 'Last successful deployment timestamp');
+}
+
+// Brand Assets & Media Helpers
+export async function getBrandAssets() {
+  const db = await getDb();
+  if (!db) return {};
+  const settings = await db.select().from(websiteSettings).where(sql`key LIKE 'brand_%'`);
+  const result: Record<string, string> = {};
+  for (const s of settings) {
+    result[s.key] = s.value;
+  }
+  return result;
+}
+
+export async function updateBrandAsset(key: string, value: string, description?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const existing = await db.select().from(websiteSettings).where(eq(websiteSettings.key, key)).limit(1);
+  if (existing.length > 0) {
+    return db.update(websiteSettings).set({ value, description: description || existing[0].description }).where(eq(websiteSettings.key, key));
+  } else {
+    return db.insert(websiteSettings).values({ key, value, description: description || 'Brand asset' });
+  }
 }

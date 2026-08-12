@@ -568,7 +568,7 @@ export default function AdminPanel() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
         <Tabs defaultValue="products" className="w-full">
-          <TabsList className="grid w-full grid-cols-7 mb-6">
+          <TabsList className="grid w-full grid-cols-10 mb-6 text-xs md:text-sm">
             <TabsTrigger value="products">Sản Phẩm</TabsTrigger>
             <TabsTrigger value="categories">Danh Mục</TabsTrigger>
             <TabsTrigger value="orders">Đơn Hàng</TabsTrigger>
@@ -578,6 +578,7 @@ export default function AdminPanel() {
             <TabsTrigger value="email">Email</TabsTrigger>
             <TabsTrigger value="blog">Bài Viết</TabsTrigger>
             <TabsTrigger value="reviews">Đánh Giá</TabsTrigger>
+            <TabsTrigger value="brand">Thương Hiệu</TabsTrigger>
           </TabsList>
 
           {/* Products Tab */}
@@ -1313,7 +1314,138 @@ export default function AdminPanel() {
               </div>
             </Card>
           </TabsContent>
+
+          {/* Brand Library / Media Tab */}
+          <TabsContent value="brand" className="space-y-6">
+            <Card className="p-6">
+              <h2 style={{ color: '#C41E3A' }} className="text-2xl font-bold mb-2">🎨 Thư Viện Thương Hiệu & Nhận Diện (Brand Library)</h2>
+              <p className="text-sm text-gray-600 mb-6">Quản lý trực tiếp logo mascot, logo ngang, favicon và banner quảng cáo mà không cần can thiệp mã nguồn.</p>
+              
+              <BrandAssetManager />
+            </Card>
+          </TabsContent>
         </Tabs>
+      </div>
+    </div>
+  );
+}
+
+
+function BrandAssetManager() {
+  const { data: brandAssets, refetch } = trpc.brand.get.useQuery();
+  const updateBrandMutation = trpc.brand.update.useMutation();
+
+  const [assets, setAssets] = useState<{ [key: string]: { value: string; description?: string } }>({});
+  const [uploadingKey, setUploadingKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (brandAssets) {
+      const map: { [key: string]: { value: string; description?: string } } = {};
+      Object.entries(brandAssets).forEach(([k, v]) => {
+        map[k] = { value: v as string };
+      });
+      setAssets(map);
+    }
+  }, [brandAssets]);
+
+  const handleUpdate = async (key: string, value: string, description?: string) => {
+    try {
+      await updateBrandMutation.mutateAsync({ key, value, description });
+      alert('Đã cập nhật tài sản thương hiệu thành công!');
+      refetch();
+    } catch (err) {
+      alert('Lỗi khi cập nhật tài sản thương hiệu');
+    }
+  };
+
+  const handleFileChange = async (key: string, e: React.ChangeEvent<HTMLInputElement>, desc?: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingKey(key);
+    try {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64data = reader.result as string;
+        setAssets(prev => ({
+          ...prev,
+          [key]: { value: base64data, description: desc }
+        }));
+        await handleUpdate(key, base64data, desc);
+        setUploadingKey(null);
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      alert('Lỗi tải ảnh lên');
+      setUploadingKey(null);
+    }
+  };
+
+  const defaultKeys = [
+    { key: 'brand_mascot_logo', title: 'Logo Mascot (Tròn / Biểu Tượng)', desc: 'Hiển thị ở header website và avatar thương hiệu' },
+    { key: 'brand_horizontal_logo', title: 'Logo Ngang / Full Brand', desc: 'Hiển thị ở footer hoặc banner trang chủ' },
+    { key: 'brand_favicon', title: 'Favicon Website', desc: 'Biểu tượng tab trình duyệt (ICO / PNG)' },
+    { key: 'brand_hero_banner', title: 'Banner Trang Chủ (Hero Banner)', desc: 'Ảnh nền lớn ở đầu trang chủ' },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {defaultKeys.map(item => {
+          const currentVal = assets[item.key]?.value || '';
+          return (
+            <div key={item.key} className="border p-4 rounded-lg bg-gray-50 flex flex-col justify-between">
+              <div>
+                <h3 className="font-bold text-lg text-red-700">{item.title}</h3>
+                <p className="text-xs text-gray-500 mb-3">{item.desc}</p>
+
+                <div className="mb-4 flex items-center justify-center bg-white border h-36 rounded overflow-hidden relative">
+                  {currentVal ? (
+                    <img src={currentVal} alt={item.title} className="max-h-full max-w-full object-contain" />
+                  ) : (
+                    <span className="text-gray-400 text-sm">Chưa có ảnh</span>
+                  )}
+                  {uploadingKey === item.key && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-sm font-bold">
+                      Đang tải lên...
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Input
+                  type="text"
+                  placeholder="Hoặc dán URL hình ảnh trực tiếp"
+                  value={currentVal}
+                  onChange={(e) => setAssets({
+                    ...assets,
+                    [item.key]: { value: e.target.value, description: item.desc }
+                  })}
+                  className="text-xs"
+                />
+                <div className="flex gap-2">
+                  <label className="flex-1 cursor-pointer bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded text-center text-xs flex items-center justify-center">
+                    <Plus size={14} className="mr-1" /> Tải Ảnh Lên
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handleFileChange(item.key, e, item.desc)}
+                    />
+                  </label>
+                  <Button
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700 text-white text-xs"
+                    onClick={() => handleUpdate(item.key, currentVal, item.desc)}
+                  >
+                    <Save size={14} className="mr-1" /> Lưu
+                  </Button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

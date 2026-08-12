@@ -276,7 +276,14 @@
 - [x] Soạn tài liệu hướng dẫn vận hành chuẩn xác cho người không chuyên
 
 ## Phase 22: Cập nhật logo thương hiệu thực tế
-- [ ] Xử lý tài sản nhận diện từ ảnh logo người dùng cung cấp
-- [ ] Thay biểu tượng 🐠 trong header bằng nhận diện Nước Mắm Cá Vàng
-- [ ] Kiểm thử hiển thị logo trên desktop và mobile
-- [ ] Ưu tiên hình ảnh mascot/logo gốc người dùng cung cấp; không dùng bản logo tái tạo bằng AI làm nhận diện chính
+- [x] Xử lý tài sản nhận diện từ ảnh logo người dùng cung cấp
+- [x] Thay biểu tượng 🐠 trong header bằng nhận diện Nước Mắm Cá Vàng
+- [x] Kiểm thử hiển thị logo trên desktop và mobile
+- [x] Ưu tiên hình ảnh mascot/logo gốc người dùng cung cấp; không dùng bản logo tái tạo bằng AI làm nhận diện chính
+
+## Phase 23: Thư viện thương hiệu & Quản lý Media trong Admin Panel
+- [ ] Mở rộng bảng websiteSettings hoặc tạo bảng brandAssets để lưu logo mascot, logo ngang, favicon, banner
+- [ ] Xây dựng tRPC procedures (brand.get, brand.update)
+- [ ] Thêm tab "Thương Hiệu / Media" vào Admin Panel với form upload và xem trước
+- [ ] Đồng bộ tài sản thương hiệu đã lưu lên header và tiêu đề website
+- [ ] Kiểm thử toàn diện và chạy Vitest

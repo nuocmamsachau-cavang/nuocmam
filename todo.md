@@ -343,3 +343,18 @@
 - [x] Fix promotion mapping/filtering or deployment synchronization if an issue is found
 - [x] Verify all expected promotions on preview and public domain, then run tests
 - [x] Save a checkpoint for the visibility fix
+
+## Phase 30: Recheck Promotion Visibility End-to-End
+- [x] Compare the Admin Panel promotion list with every database row and active-window value
+- [x] Capture exact `promotions.list` response from preview and public deployment
+- [x] Verify the public bundle/version and cache behavior against the latest checkpoint
+- [x] Reproduce the missing promotion with a concrete record and fix the actual cause
+- [x] Add or update regression tests for the reproduced visibility failure
+- [x] Recheck Admin, preview and public domain, then save a new checkpoint
+
+## Phase 31: Create Mua 2 Tặng 1 Promotion
+- [x] Create real promotion `MUA2TANG1` with active dates matching SA-20
+- [x] Verify both promotions render on preview and public domain
+- [x] Verify both promotions render on preview and public domain
+- [x] Run regression tests and save a checkpoint
+- [x] Map `MUA2TANG1` to the public card title “Mua 2 Tặng 1” and reward text “Tặng 1” instead of a percentage label

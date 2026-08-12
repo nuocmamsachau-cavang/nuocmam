@@ -109,3 +109,19 @@ describe('Promotion public list contract', () => {
     }
   });
 });
+
+
+describe('Buy-two-get-one promotion mapping', () => {
+  it('renders the business promotion title and reward text', () => {
+    const card = mapPromotionToCard({
+      ...activePromotion,
+      id: 11,
+      code: 'MUA2TANG1',
+      discountPercent: 1,
+      description: 'Mua 2 chai nước mắm, tặng 1 chai cùng loại.',
+    }, 1);
+    expect(card.title).toBe('Mua 2 Tặng 1');
+    expect(card.discount).toBe('Tặng 1');
+    expect(card.description).toContain('Mua 2 chai');
+  });
+});

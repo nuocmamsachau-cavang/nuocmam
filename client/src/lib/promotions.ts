@@ -50,13 +50,16 @@ export function mapPromotionToCard(
   promotion: PromotionRecord,
   index: number,
 ): PromotionCardData {
-  const discount = `${promotion.discountPercent}%`;
+  const isBuyTwoGetOne = promotion.code.trim().toUpperCase() === 'MUA2TANG1';
+  const discount = isBuyTwoGetOne ? 'Tặng 1' : `${promotion.discountPercent}%`;
   const description = promotion.description?.trim()
-    || `Nhập mã ${promotion.code} để nhận ưu đãi ${discount}`;
+    || (isBuyTwoGetOne
+      ? 'Mua 2 chai nước mắm, tặng 1 chai cùng loại.'
+      : `Nhập mã ${promotion.code} để nhận ưu đãi ${discount}`);
 
   return {
     id: promotion.id,
-    title: `Ưu Đãi ${discount}`,
+    title: isBuyTwoGetOne ? 'Mua 2 Tặng 1' : `Ưu Đãi ${discount}`,
     description,
     discount,
     backgroundColor: index % 2 === 0 ? '#C41E3A' : '#8B1428',

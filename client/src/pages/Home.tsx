@@ -274,11 +274,14 @@ export default function Home() {
                     <Card key={product.id} className="p-4 hover:shadow-lg transition">
                       <div className="relative w-full h-40 bg-amber-100 rounded mb-3 overflow-hidden flex items-center justify-center">
                         <img 
-                          src={product.imageUrl || "https://images.unsplash.com/photo-1598514982205-f36804f32e98"} 
+                          src={product.imageUrl || `https://picsum.photos/seed/nuocmam${product.id}/800/800`} 
                           alt={product.name}
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1598514982205-f36804f32e98";
+                            const target = e.target as HTMLImageElement;
+                            if (!target.src.includes('picsum.photos')) {
+                              target.src = `https://picsum.photos/seed/nuocmam${product.id}/800/800`;
+                            }
                           }}
                         />
                       </div>
@@ -322,11 +325,14 @@ export default function Home() {
                     <Card key={product.id} className="p-4 hover:shadow-lg transition">
                       <div className="relative w-full h-40 bg-amber-100 rounded mb-3 overflow-hidden flex items-center justify-center">
                         <img 
-                          src={product.imageUrl || "https://images.unsplash.com/photo-1598514982205-f36804f32e98"} 
+                          src={product.imageUrl || `https://picsum.photos/seed/nuocmam${product.id}/800/800`} 
                           alt={product.name}
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1598514982205-f36804f32e98";
+                            const target = e.target as HTMLImageElement;
+                            if (!target.src.includes('picsum.photos')) {
+                              target.src = `https://picsum.photos/seed/nuocmam${product.id}/800/800`;
+                            }
                           }}
                         />
                       </div>

@@ -269,7 +269,7 @@ export default function Home() {
                 <h3 style={{ color: '#8B1428' }} className="text-2xl font-bold mb-6 border-l-4 border-yellow-600 pl-4">
                   {category.name}
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
                   {groupedProducts[category.id]?.map((product: any) => (
                     <Card key={product.id} className="p-4 hover:shadow-lg transition">
                       <div className="relative w-full h-40 bg-amber-100 rounded mb-3 overflow-hidden flex items-center justify-center">
@@ -328,7 +328,7 @@ export default function Home() {
                 <h3 style={{ color: '#8B1428' }} className="text-2xl font-bold mb-6 border-l-4 border-yellow-600 pl-4">
                   {category.name}
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
                   {groupedProducts[category.id]?.map((product: any) => (
                     <Card key={product.id} className="p-4 hover:shadow-lg transition">
                       <div className="relative w-full h-40 bg-amber-100 rounded mb-3 overflow-hidden flex items-center justify-center">

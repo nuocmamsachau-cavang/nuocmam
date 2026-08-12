@@ -46,6 +46,7 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
+  const [sortOption, setSortOption] = useState<'default' | 'priceAsc' | 'priceDesc' | 'ratingDesc' | 'salesDesc'>('default');
   const parsedMinPrice = minPrice.trim() ? Number(minPrice) : undefined;
   const parsedMaxPrice = maxPrice.trim() ? Number(maxPrice) : undefined;
   const hasInvalidPriceRange = (parsedMinPrice !== undefined && Number.isNaN(parsedMinPrice))
@@ -55,7 +56,8 @@ export default function Home() {
     search: searchTerm.trim() || undefined,
     minPrice: parsedMinPrice,
     maxPrice: parsedMaxPrice,
-  }), [searchTerm, parsedMinPrice, parsedMaxPrice]);
+    sort: sortOption,
+  }), [searchTerm, parsedMinPrice, parsedMaxPrice, sortOption]);
   const { data: products = [], isLoading: productsLoading } = trpc.products.list.useQuery(productQuery, {
     enabled: !hasInvalidPriceRange,
   });
@@ -165,6 +167,7 @@ export default function Home() {
     setSearchTerm('');
     setMinPrice('');
     setMaxPrice('');
+    setSortOption('default');
   };
 
   const renderRating = (product: any) => {
@@ -205,8 +208,11 @@ export default function Home() {
       <h4 style={{ color: '#C41E3A' }} className="mb-2 font-bold">{product.name}</h4>
       <p className="mb-3 line-clamp-3 text-sm text-gray-600">{product.description}</p>
       {renderRating(product)}
-      <div style={{ color: '#C41E3A' }} className="mb-4 text-xl font-bold">
-        {parseFloat(product.price).toLocaleString()}₫
+      <div className="mb-2 flex items-end justify-between gap-2">
+        <div style={{ color: '#C41E3A' }} className="text-xl font-bold">
+          {parseFloat(product.price).toLocaleString()}₫
+        </div>
+        {Number(product.salesCount ?? 0) > 0 && <span className="text-xs text-gray-500">Đã bán {product.salesCount}</span>}
       </div>
       <div className="flex gap-2">
         <Button onClick={() => addToCart(product)} style={{ backgroundColor: '#D4AF37', color: '#C41E3A' }} className="flex-1 text-sm">
@@ -341,7 +347,7 @@ export default function Home() {
             <div className="mb-4 flex items-center gap-2 font-bold text-[#8B1428]">
               <SlidersHorizontal size={20} /> Tìm sản phẩm phù hợp
             </div>
-            <div className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end">
+            <div className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.25fr)_auto] md:items-end">
               <label className="block">
                 <span className="mb-2 block text-sm font-semibold text-gray-700">Từ khóa</span>
                 <div className="relative">
@@ -375,6 +381,20 @@ export default function Home() {
                   placeholder="Không giới hạn"
                   className="w-full rounded-lg border border-amber-200 bg-[#fffaf2] px-3 py-2.5 text-sm outline-none transition focus:border-[#C41E3A] focus:ring-2 focus:ring-[#D4AF37]/40"
                 />
+              </label>
+              <label className="block">
+                <span className="mb-2 block text-sm font-semibold text-gray-700">Sắp xếp</span>
+                <select
+                  value={sortOption}
+                  onChange={(event) => setSortOption(event.target.value as typeof sortOption)}
+                  className="w-full rounded-lg border border-amber-200 bg-[#fffaf2] px-3 py-2.5 text-sm outline-none transition focus:border-[#C41E3A] focus:ring-2 focus:ring-[#D4AF37]/40"
+                >
+                  <option value="default">Mặc định</option>
+                  <option value="priceAsc">Giá thấp đến cao</option>
+                  <option value="priceDesc">Giá cao đến thấp</option>
+                  <option value="ratingDesc">Đánh giá cao nhất</option>
+                  <option value="salesDesc">Bán chạy nhất</option>
+                </select>
               </label>
               <Button variant="outline" onClick={resetProductFilters} className="border-amber-300 text-[#8B1428] hover:bg-amber-50">
                 <RotateCcw size={16} className="mr-2" /> Xóa lọc

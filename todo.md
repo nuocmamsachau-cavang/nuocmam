@@ -366,3 +366,11 @@
 - [x] Add tests for blog pagination/filtering, rating aggregation and product filtering
 - [x] Run TypeScript, Vitest, build and responsive browser verification
 - [x] Save a new checkpoint after all three upgrades are validated
+
+## Phase 33: Product Sorting and Admin Order Status Filters
+- [x] Add product sorting by price ascending/descending, approved rating and sales volume
+- [x] Expose sorting through products tRPC/database query and preserve search/price filters
+- [x] Add order status filter controls in Admin Panel with clear empty state
+- [x] Add tests for product sorting and order status filtering
+- [x] Run TypeScript, Vitest, build and responsive browser verification
+- [x] Save a new checkpoint after both features are validated

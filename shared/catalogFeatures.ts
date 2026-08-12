@@ -1,8 +1,13 @@
+export type ProductSortOption = 'default' | 'priceAsc' | 'priceDesc' | 'ratingDesc' | 'salesDesc';
+
 export type ProductFilterInput = {
   search?: string;
   minPrice?: number;
   maxPrice?: number;
+  sort?: ProductSortOption;
 };
+
+export type OrderStatus = 'all' | 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
 
 export type RatingInput = {
   rating: number;
@@ -19,6 +24,20 @@ export function matchesProductFilters(
   return (!keyword || haystack.includes(keyword))
     && (filters.minPrice === undefined || price >= filters.minPrice)
     && (filters.maxPrice === undefined || price <= filters.maxPrice);
+}
+
+export function sortProducts<T extends { price: string | number; averageRating?: number; salesCount?: number; displayOrder?: number }>(products: T[], sort: ProductSortOption = 'default') {
+  return [...products].sort((a, b) => {
+    if (sort === 'priceAsc') return Number(a.price) - Number(b.price);
+    if (sort === 'priceDesc') return Number(b.price) - Number(a.price);
+    if (sort === 'ratingDesc') return Number(b.averageRating ?? 0) - Number(a.averageRating ?? 0) || Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0);
+    if (sort === 'salesDesc') return Number(b.salesCount ?? 0) - Number(a.salesCount ?? 0) || Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0);
+    return Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0);
+  });
+}
+
+export function matchesOrderStatus(order: { status?: string | null }, status: OrderStatus) {
+  return status === 'all' || order.status === status;
 }
 
 export function paginateItems<T>(items: T[], page = 1, pageSize = 6) {

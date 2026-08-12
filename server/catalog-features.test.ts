@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getApprovedRatingSummary, matchesProductFilters, paginateItems } from '../shared/catalogFeatures';
+import { getApprovedRatingSummary, matchesOrderStatus, matchesProductFilters, paginateItems, sortProducts } from '../shared/catalogFeatures';
 
 describe('catalog feature helpers', () => {
   it('filters products by Vietnamese keyword across name and description', () => {
@@ -33,5 +33,23 @@ describe('catalog feature helpers', () => {
 
   it('returns zero rating when no review is approved', () => {
     expect(getApprovedRatingSummary([{ rating: 5, isApproved: false }])).toEqual({ averageRating: 0, reviewCount: 0 });
+  });
+
+  it('sorts products by price, rating and sales without mutating the source', () => {
+    const products = [
+      { id: 1, price: '250000', averageRating: 4.2, salesCount: 3, displayOrder: 1 },
+      { id: 2, price: '120000', averageRating: 4.8, salesCount: 10, displayOrder: 2 },
+      { id: 3, price: '180000', averageRating: 3.9, salesCount: 5, displayOrder: 3 },
+    ];
+    expect(sortProducts(products, 'priceAsc').map((product) => product.id)).toEqual([2, 3, 1]);
+    expect(sortProducts(products, 'ratingDesc').map((product) => product.id)).toEqual([2, 1, 3]);
+    expect(sortProducts(products, 'salesDesc').map((product) => product.id)).toEqual([2, 3, 1]);
+    expect(products.map((product) => product.id)).toEqual([1, 2, 3]);
+  });
+
+  it('matches all orders or only the selected status', () => {
+    expect(matchesOrderStatus({ status: 'delivered' }, 'all')).toBe(true);
+    expect(matchesOrderStatus({ status: 'delivered' }, 'delivered')).toBe(true);
+    expect(matchesOrderStatus({ status: 'pending' }, 'delivered')).toBe(false);
   });
 });

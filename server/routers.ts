@@ -46,6 +46,7 @@ export const appRouter = router({
         search: z.string().trim().optional(),
         minPrice: z.number().nonnegative().optional(),
         maxPrice: z.number().nonnegative().optional(),
+        sort: z.enum(['default', 'priceAsc', 'priceDesc', 'ratingDesc', 'salesDesc']).optional(),
       }).optional())
       .query(({ input }) => getAllProducts(input ?? {})),
     getById: publicProcedure.input(z.number()).query(({ input }) => getProductById(input)),
@@ -129,7 +130,11 @@ export const appRouter = router({
 
   // Orders
   orders: router({
-    list: publicProcedure.query(() => getOrders()),
+    list: publicProcedure
+      .input(z.object({
+        status: z.enum(['all', 'pending', 'confirmed', 'shipped', 'delivered', 'cancelled']).optional(),
+      }).optional())
+      .query(({ input }) => getOrders(input?.status ?? 'all')),
     create: publicProcedure
       .input(z.object({
         customerName: z.string(),

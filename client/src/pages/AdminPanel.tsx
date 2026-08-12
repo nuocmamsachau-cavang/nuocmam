@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, Plus, Edit2, Trash2, Save, Loader } from 'lucide-react';
+import { Filter, LogOut, Plus, Edit2, Trash2, Save, Loader } from 'lucide-react';
 
 interface AdminState {
   token: string | null;
@@ -18,6 +18,23 @@ function formatDateInput(value: unknown) {
   return Number.isNaN(date.getTime()) ? '' : date.toISOString().slice(0, 10);
 }
 
+const ORDER_STATUS_LABELS = {
+  all: 'Tất cả trạng thái',
+  pending: 'Chờ xử lý',
+  confirmed: 'Đã xác nhận',
+  shipped: 'Đang giao',
+  delivered: 'Đã giao',
+  cancelled: 'Đã hủy',
+} as const;
+
+const ORDER_STATUS_COLORS = {
+  pending: 'bg-amber-100 text-amber-800',
+  confirmed: 'bg-blue-100 text-blue-800',
+  shipped: 'bg-indigo-100 text-indigo-800',
+  delivered: 'bg-green-100 text-green-800',
+  cancelled: 'bg-red-100 text-red-800',
+} as const;
+
 export default function AdminPanel() {
   const [adminState, setAdminState] = useState<AdminState>({
     token: localStorage.getItem('adminToken'),
@@ -29,6 +46,7 @@ export default function AdminPanel() {
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
+  const [orderStatusFilter, setOrderStatusFilter] = useState<'all' | 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled'>('all');
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [newProduct, setNewProduct] = useState({
     categoryId: 0,
@@ -109,7 +127,11 @@ export default function AdminPanel() {
   const { data: categoriesData } = trpc.categories.list.useQuery(undefined, {
     enabled: adminState.isAuthenticated,
   });
-  const { data: ordersData } = trpc.orders.list.useQuery(undefined, {
+  const ordersQueryInput = useMemo(
+    () => ({ status: orderStatusFilter === 'all' ? undefined : orderStatusFilter }),
+    [orderStatusFilter],
+  );
+  const { data: ordersData } = trpc.orders.list.useQuery(ordersQueryInput, {
     enabled: adminState.isAuthenticated,
   });
   const { data: promotionsData } = trpc.promotions.list.useQuery(undefined, {
@@ -1088,37 +1110,74 @@ export default function AdminPanel() {
           {/* Orders Tab */}
           <TabsContent value="orders" className="space-y-6">
             <Card className="p-6">
-              <h2 style={{ color: '#C41E3A' }} className="text-2xl font-bold mb-6">📦 Quản Lý Đơn Hàng</h2>
+              <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h2 style={{ color: '#C41E3A' }} className="text-2xl font-bold">📦 Quản Lý Đơn Hàng</h2>
+                  <p className="mt-1 text-sm text-gray-600">Đang hiển thị {orders.length} đơn hàng theo bộ lọc.</p>
+                </div>
+                <label className="flex items-center gap-2 text-sm font-semibold text-[#8B1428]">
+                  <Filter size={17} />
+                  <span className="sr-only">Lọc theo trạng thái đơn hàng</span>
+                  <select
+                    value={orderStatusFilter}
+                    onChange={(event) => setOrderStatusFilter(event.target.value as typeof orderStatusFilter)}
+                    className="rounded-lg border border-amber-200 bg-[#fffaf2] px-3 py-2.5 text-sm font-semibold outline-none transition focus:border-[#C41E3A] focus:ring-2 focus:ring-[#D4AF37]/40"
+                  >
+                    {Object.entries(ORDER_STATUS_LABELS).map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
               <div className="space-y-4">
-                {orders && orders.length > 0 ? (
-                  orders.map((order: any) => (
-                    <div key={order.id} className="border p-4 rounded">
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div>
-                          <p className="text-xs text-gray-500">Mã Đơn</p>
-                          <p className="font-bold">{order.orderNumber}</p>
+                {orders.length > 0 ? (
+                  orders.map((order: any) => {
+                    const status = (order.status || 'pending') as keyof typeof ORDER_STATUS_COLORS;
+                    return (
+                      <div key={order.id} className="rounded-lg border border-amber-100 bg-white p-4 shadow-sm">
+                        <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
+                          <div>
+                            <p className="text-xs text-gray-500">Mã Đơn</p>
+                            <p className="font-bold">{order.orderNumber}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500">Khách Hàng</p>
+                            <p className="font-bold">{order.customerName}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500">Điện Thoại</p>
+                            <p className="font-bold">{order.customerPhone}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500">Tổng Tiền</p>
+                            <p className="font-bold">{order.totalAmount} VNĐ</p>
+                          </div>
+                          <div>
+                            <p className="mb-1 text-xs text-gray-500">Trạng Thái</p>
+                            <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${ORDER_STATUS_COLORS[status] || ORDER_STATUS_COLORS.pending}`}>
+                              {ORDER_STATUS_LABELS[status] || ORDER_STATUS_LABELS.pending}
+                            </span>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-xs text-gray-500">Khách Hàng</p>
-                          <p className="font-bold">{order.customerName}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500">Điện Thoại</p>
-                          <p className="font-bold">{order.customerPhone}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500">Tổng Tiền</p>
-                          <p className="font-bold">{order.totalAmount} VNĐ</p>
+                        <div className="mt-3 border-t pt-3">
+                          <p className="text-sm text-gray-600"><strong>Địa chỉ:</strong> {order.customerAddress}</p>
+                          <p className="text-sm text-gray-600"><strong>Ghi chú:</strong> {order.notes || 'Không có'}</p>
                         </div>
                       </div>
-                      <div className="mt-3 pt-3 border-t">
-                        <p className="text-sm text-gray-600"><strong>Địa chỉ:</strong> {order.customerAddress}</p>
-                        <p className="text-sm text-gray-600"><strong>Ghi chú:</strong> {order.notes || 'Không có'}</p>
-                      </div>
-                    </div>
-                  ))
+                    );
+                  })
                 ) : (
-                  <p className="text-gray-500 text-center py-8">Chưa có đơn hàng nào</p>
+                  <div className="rounded-lg border border-dashed border-amber-300 bg-amber-50/50 px-4 py-10 text-center">
+                    <Filter className="mx-auto mb-3 text-[#D4AF37]" size={30} />
+                    <p className="font-semibold text-[#8B1428]">
+                      {orderStatusFilter === 'all' ? 'Chưa có đơn hàng nào' : `Chưa có đơn hàng ở trạng thái “${ORDER_STATUS_LABELS[orderStatusFilter]}”`}
+                    </p>
+                    {orderStatusFilter !== 'all' && (
+                      <Button variant="outline" onClick={() => setOrderStatusFilter('all')} className="mt-4 border-amber-300 text-[#8B1428] hover:bg-amber-100">
+                        Xem tất cả đơn hàng
+                      </Button>
+                    )}
+                  </div>
                 )}
               </div>
             </Card>

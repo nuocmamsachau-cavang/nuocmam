@@ -2,7 +2,7 @@ import { eq, and, desc, asc, sql, like } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, categories, products, seoMetadata, orders, adminUsers, promotions, emailConfig, blogPosts, productReviews, productImages, ProductImage, websiteSettings, WebsiteSetting } from "../drizzle/schema";
 import { ENV } from './_core/env';
-import { getApprovedRatingSummary, matchesProductFilters, paginateItems } from '../shared/catalogFeatures';
+import { getApprovedRatingSummary, matchesOrderStatus, matchesProductFilters, paginateItems, sortProducts, ProductSortOption, OrderStatus } from '../shared/catalogFeatures';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -116,6 +116,7 @@ export type ProductListFilters = {
   search?: string;
   minPrice?: number;
   maxPrice?: number;
+  sort?: ProductSortOption;
 };
 
 export async function getAllProducts(filters: ProductListFilters = {}) {
@@ -128,6 +129,20 @@ export async function getAllProducts(filters: ProductListFilters = {}) {
     productId: productReviews.productId,
     rating: productReviews.rating,
   }).from(productReviews).where(eq(productReviews.isApproved, true));
+  const orderRows = await db.select({ status: orders.status, items: orders.items }).from(orders);
+  const salesCountByProduct = new Map<number, number>();
+  for (const order of orderRows) {
+    if (order.status === 'cancelled') continue;
+    try {
+      const items = JSON.parse(order.items) as Array<{ id?: number; quantity?: number }>;
+      for (const item of items) {
+        if (!item.id) continue;
+        salesCountByProduct.set(item.id, (salesCountByProduct.get(item.id) ?? 0) + Number(item.quantity ?? 0));
+      }
+    } catch {
+      // Keep product listing available when legacy order items are not valid JSON.
+    }
+  }
   const ratingByProduct = new Map<number, { total: number; count: number }>();
   for (const review of approvedReviews) {
     const current = ratingByProduct.get(review.productId) ?? { total: 0, count: 0 };
@@ -136,14 +151,16 @@ export async function getAllProducts(filters: ProductListFilters = {}) {
     ratingByProduct.set(review.productId, current);
   }
 
-  return rows.filter((product) => matchesProductFilters(product, filters)).map((product) => {
+  const filteredProducts = rows.filter((product) => matchesProductFilters(product, filters)).map((product) => {
     const rating = ratingByProduct.get(product.id);
     return {
       ...product,
       averageRating: rating ? Number((rating.total / rating.count).toFixed(1)) : 0,
       reviewCount: rating?.count ?? 0,
+      salesCount: salesCountByProduct.get(product.id) ?? 0,
     };
   });
+  return sortProducts(filteredProducts, filters.sort);
 }
 
 export async function getProductRatingSummary(productId: number) {
@@ -179,10 +196,11 @@ export async function createOrder(order: any) {
   return db.insert(orders).values(order);
 }
 
-export async function getOrders() {
+export async function getOrders(status: OrderStatus = 'all') {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(orders).orderBy(desc(orders.createdAt));
+  const rows = await db.select().from(orders).orderBy(desc(orders.createdAt));
+  return rows.filter((order) => matchesOrderStatus(order, status));
 }
 
 // Admin User Queries

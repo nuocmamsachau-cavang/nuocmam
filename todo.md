@@ -402,3 +402,10 @@
 - [x] Wire database helpers and tRPC procedures for campaign and order metrics
 - [x] Add verified public links for Facebook, website, Instagram, TikTok and Google Maps
 - [x] Run Vitest specs, TypeScript checks, and browser verification; hold checkpoint until ad API credentials are available
+
+## Phase 39: Standalone Operations Dashboard for Sa Chau
+- [x] Create a dedicated standalone management dashboard (`/operations`) separate from the public e-commerce store
+- [x] Implement order tracking, revenue KPIs, customer stats and inventory health metrics
+- [x] Implement multi-channel advertising campaign metrics structure for Google Ads, Facebook Ads and TikTok Ads
+- [x] Integrate verified official channel links (Facebook, website, Instagram, TikTok, Google Maps)
+- [x] Secure dashboard access with admin authentication and prepare for Vercel deployment

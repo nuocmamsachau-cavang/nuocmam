@@ -1,9 +1,10 @@
-import { eq, and, desc, asc, sql, like } from "drizzle-orm";
+import { eq, and, desc, asc, sql, like, gte, lte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, categories, products, seoMetadata, orders, adminUsers, promotions, emailConfig, blogPosts, productReviews, productImages, ProductImage, websiteSettings, WebsiteSetting } from "../drizzle/schema";
+import { InsertUser, users, categories, products, seoMetadata, orders, adminUsers, promotions, emailConfig, blogPosts, productReviews, productImages, ProductImage, websiteSettings, WebsiteSetting, adCampaigns, adMetrics, InsertAdCampaign, InsertAdMetric } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { getApprovedRatingSummary, matchesOrderStatus, matchesProductFilters, paginateItems, sortProducts, ProductSortOption, OrderStatus } from '../shared/catalogFeatures';
 import { buildDashboardMetrics, DashboardDateFilter } from '../shared/dashboardFeatures';
+import { deriveAdEfficiency } from '../shared/adFeatures';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -213,6 +214,125 @@ export async function getDashboardMetrics(filter: DashboardDateFilter = {}) {
     db.select({ rating: productReviews.rating, isApproved: productReviews.isApproved }).from(productReviews),
   ]);
   return buildDashboardMetrics(orderRows, productRows, reviewRows, filter);
+}
+
+export type AdMetricsFilter = {
+  startDate?: string;
+  endDate?: string;
+};
+
+function dateBoundary(value: string, endOfDay = false) {
+  return new Date(`${value}T${endOfDay ? '23:59:59.999' : '00:00:00.000'}Z`);
+}
+
+export async function getAdCampaignOverview(filter: AdMetricsFilter = {}) {
+  const db = await getDb();
+  const empty = {
+    summary: { totalSpend: 0, totalClicks: 0, totalImpressions: 0, totalConversions: 0, totalConversionValue: 0, blendedCtr: 0, blendedCpc: 0, blendedCpm: 0, roas: 0 },
+    byPlatform: [],
+    campaigns: [],
+    dailySeries: [],
+  };
+  if (!db) return empty;
+
+  const conditions = [];
+  if (filter.startDate) conditions.push(gte(adMetrics.metricDate, dateBoundary(filter.startDate)));
+  if (filter.endDate) conditions.push(lte(adMetrics.metricDate, dateBoundary(filter.endDate, true)));
+  const rows = await db.select({
+    campaignId: adMetrics.campaignId,
+    metricDate: adMetrics.metricDate,
+    spend: adMetrics.spend,
+    impressions: adMetrics.impressions,
+    clicks: adMetrics.clicks,
+    conversions: adMetrics.conversions,
+    conversionValue: adMetrics.conversionValue,
+    platform: adCampaigns.platform,
+    campaignName: adCampaigns.name,
+    campaignStatus: adCampaigns.status,
+  }).from(adMetrics).innerJoin(adCampaigns, eq(adMetrics.campaignId, adCampaigns.id)).where(conditions.length ? and(...conditions) : undefined).orderBy(desc(adMetrics.metricDate));
+
+  const byPlatform = new Map<string, { platform: string; spend: number; impressions: number; clicks: number; conversions: number; conversionValue: number }>();
+  const byCampaign = new Map<number, { campaignId: number; platform: string; name: string; status: string; spend: number; impressions: number; clicks: number; conversions: number; conversionValue: number }>();
+  const byDate = new Map<string, { date: string; spend: number; conversionValue: number; conversions: number }>();
+  let totalSpend = 0;
+  let totalImpressions = 0;
+  let totalClicks = 0;
+  let totalConversions = 0;
+  let totalConversionValue = 0;
+
+  for (const row of rows) {
+    const spend = Number(row.spend ?? 0);
+    const impressions = Number(row.impressions ?? 0);
+    const clicks = Number(row.clicks ?? 0);
+    const conversions = Number(row.conversions ?? 0);
+    const conversionValue = Number(row.conversionValue ?? 0);
+    totalSpend += spend;
+    totalImpressions += impressions;
+    totalClicks += clicks;
+    totalConversions += conversions;
+    totalConversionValue += conversionValue;
+
+    const platform = byPlatform.get(row.platform) ?? { platform: row.platform, spend: 0, impressions: 0, clicks: 0, conversions: 0, conversionValue: 0 };
+    platform.spend += spend;
+    platform.impressions += impressions;
+    platform.clicks += clicks;
+    platform.conversions += conversions;
+    platform.conversionValue += conversionValue;
+    byPlatform.set(row.platform, platform);
+
+    const campaign = byCampaign.get(row.campaignId) ?? { campaignId: row.campaignId, platform: row.platform, name: row.campaignName, status: row.campaignStatus, spend: 0, impressions: 0, clicks: 0, conversions: 0, conversionValue: 0 };
+    campaign.spend += spend;
+    campaign.impressions += impressions;
+    campaign.clicks += clicks;
+    campaign.conversions += conversions;
+    campaign.conversionValue += conversionValue;
+    byCampaign.set(row.campaignId, campaign);
+
+    const date = new Date(row.metricDate).toISOString().slice(0, 10);
+    const day = byDate.get(date) ?? { date, spend: 0, conversionValue: 0, conversions: 0 };
+    day.spend += spend;
+    day.conversionValue += conversionValue;
+    day.conversions += conversions;
+    byDate.set(date, day);
+  }
+
+  const withEfficiency = <T extends { spend: number; impressions: number; clicks: number; conversions: number; conversionValue: number }>(item: T) => deriveAdEfficiency(item);
+
+  return {
+    summary: {
+      totalSpend,
+      totalClicks,
+      totalImpressions,
+      totalConversions,
+      totalConversionValue,
+      blendedCtr: totalImpressions > 0 ? Number(((totalClicks / totalImpressions) * 100).toFixed(2)) : 0,
+      blendedCpc: totalClicks > 0 ? Number((totalSpend / totalClicks).toFixed(2)) : 0,
+      blendedCpm: totalImpressions > 0 ? Number(((totalSpend / totalImpressions) * 1000).toFixed(2)) : 0,
+      roas: totalSpend > 0 ? Number((totalConversionValue / totalSpend).toFixed(2)) : 0,
+    },
+    byPlatform: Array.from(byPlatform.values()).map(withEfficiency),
+    campaigns: Array.from(byCampaign.values()).map(withEfficiency).sort((a, b) => b.spend - a.spend),
+    dailySeries: Array.from(byDate.values()).sort((a, b) => a.date.localeCompare(b.date)),
+  };
+}
+
+export async function upsertAdCampaign(input: InsertAdCampaign) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  const existing = await db.select({ id: adCampaigns.id }).from(adCampaigns).where(and(eq(adCampaigns.platform, input.platform), eq(adCampaigns.externalId, input.externalId))).limit(1);
+  if (existing[0]) {
+    await db.update(adCampaigns).set({ ...input, updatedAt: new Date() }).where(eq(adCampaigns.id, existing[0].id));
+    return existing[0].id;
+  }
+  const result = await db.insert(adCampaigns).values(input);
+  return Number(result[0].insertId);
+}
+
+export async function insertAdMetric(input: InsertAdMetric) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  const result = await db.insert(adMetrics).values(input);
+  return Number(result[0].insertId);
 }
 
 // Admin User Queries

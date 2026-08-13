@@ -88,6 +88,21 @@ function formatDate(value: string | Date) {
 }
 
 export default function SaChauOperations() {
+  const [adminToken, setAdminToken] = useState(() => localStorage.getItem('adminToken'));
+  const loginMutation = trpc.admin.login.useMutation();
+
+  if (!adminToken) {
+    return <OperationsLogin loading={loginMutation.isPending} onLogin={async (username: string, password: string) => {
+      const result = await loginMutation.mutateAsync({ username, password });
+      localStorage.setItem('adminToken', result.token);
+      localStorage.setItem('adminUsername', result.admin.username);
+      setAdminToken(result.token);
+    }} />;
+  }
+  return <SaChauOperationsWorkspace onLogout={() => setAdminToken(null)} />;
+}
+
+function SaChauOperationsWorkspace({ onLogout }: { onLogout: () => void }) {
   const [activeModule, setActiveModule] = useState<ModuleKey>('overview');
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [startDate, setStartDate] = useState('');
@@ -99,6 +114,7 @@ export default function SaChauOperations() {
     endDate: endDate || undefined,
   }), [startDate, endDate]);
   const dashboardQuery = trpc.analytics.getDashboard.useQuery(dashboardFilters);
+  const adsQuery = trpc.analytics.getAds.useQuery(dashboardFilters);
   const ordersQuery = trpc.orders.list.useQuery({ status: orderFilter === 'all' ? undefined : orderFilter }, { enabled: activeModule === 'sales' || activeModule === 'overview' });
   const productsQuery = trpc.products.list.useQuery({ sort: 'salesDesc' }, { enabled: activeModule === 'sales' || activeModule === 'analytics' || activeModule === 'overview' });
   const dashboard = dashboardQuery.data;
@@ -167,6 +183,9 @@ export default function SaChauOperations() {
               <Link href="/" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50">
                 <Truck className="h-4 w-4" /> Về website bán hàng
               </Link>
+              <button type="button" onClick={() => { localStorage.removeItem('adminToken'); localStorage.removeItem('adminUsername'); onLogout(); }} className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-bold text-slate-500 hover:bg-red-50 hover:text-[#C41E3A]">
+                <X className="h-4 w-4" /> Đăng xuất dashboard
+              </button>
             </div>
           </div>
         </aside>
@@ -185,7 +204,7 @@ export default function SaChauOperations() {
               </div>
               <div className="flex items-center gap-2 sm:gap-3">
                 <span className="hidden rounded-full bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 sm:inline-flex"><span className="mr-2 mt-0.5 h-2 w-2 rounded-full bg-emerald-500" />Hệ thống hoạt động</span>
-                <Button type="button" variant="outline" onClick={() => dashboardQuery.refetch()} className="border-slate-200 text-slate-600" disabled={dashboardQuery.isFetching}>
+                <Button type="button" variant="outline" onClick={() => { void dashboardQuery.refetch(); void adsQuery.refetch(); }} className="border-slate-200 text-slate-600" disabled={dashboardQuery.isFetching || adsQuery.isFetching}>
                   <RefreshCw className={`h-4 w-4 sm:mr-2 ${dashboardQuery.isFetching ? 'animate-spin' : ''}`} />
                   <span className="hidden sm:inline">Làm mới</span>
                 </Button>
@@ -194,10 +213,10 @@ export default function SaChauOperations() {
           </header>
 
           <div className="mx-auto max-w-[1600px] space-y-6 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
-            {activeModule === 'overview' && <OverviewModule dashboard={dashboard} startDate={startDate} endDate={endDate} setStartDate={setStartDate} setEndDate={setEndDate} onClear={() => { setStartDate(''); setEndDate(''); }} />}
+            {activeModule === 'overview' && <OverviewModule dashboard={dashboard} adOverview={adsQuery.data} startDate={startDate} endDate={endDate} setStartDate={setStartDate} setEndDate={setEndDate} onClear={() => { setStartDate(''); setEndDate(''); }} />}
             {activeModule === 'sales' && <SalesModule orders={filteredOrders} products={productsQuery.data ?? []} orderFilter={orderFilter} setOrderFilter={setOrderFilter} orderSearch={orderSearch} setOrderSearch={setOrderSearch} loading={ordersQuery.isLoading} />}
-            {activeModule === 'ads' && <AdsModule />}
-            {activeModule === 'analytics' && <AnalyticsModule dashboard={dashboard} products={productsQuery.data ?? []} />}
+            {activeModule === 'ads' && <AdsModule adOverview={adsQuery.data} />}
+            {activeModule === 'analytics' && <AnalyticsModule dashboard={dashboard} adOverview={adsQuery.data} products={productsQuery.data ?? []} />}
           </div>
         </main>
       </div>
@@ -205,8 +224,10 @@ export default function SaChauOperations() {
   );
 }
 
-function OverviewModule({ dashboard, startDate, endDate, setStartDate, setEndDate, onClear }: { dashboard: any; startDate: string; endDate: string; setStartDate: (value: string) => void; setEndDate: (value: string) => void; onClear: () => void }) {
+function OverviewModule({ dashboard, adOverview, startDate, endDate, setStartDate, setEndDate, onClear }: { dashboard: any; adOverview: any; startDate: string; endDate: string; setStartDate: (value: string) => void; setEndDate: (value: string) => void; onClear: () => void }) {
   const chartData = dashboard?.revenueSeries ?? [];
+  const adSummary = adOverview?.summary;
+  const hasAdData = Boolean(adSummary && adSummary.totalSpend > 0);
   return (
     <div className="space-y-6">
       <section className="rounded-3xl bg-gradient-to-br from-[#8B1428] via-[#C41E3A] to-[#E39B21] p-6 text-white shadow-xl sm:p-8">
@@ -237,8 +258,8 @@ function OverviewModule({ dashboard, startDate, endDate, setStartDate, setEndDat
         <KpiCard label="Doanh thu" value={dashboard ? formatCurrency(dashboard.summary.totalRevenue) : 'Đang tải'} icon={<CircleDollarSign />} tone="violet" />
         <KpiCard label="Đơn hàng" value={dashboard ? dashboard.summary.totalOrders.toLocaleString('vi-VN') : 'Đang tải'} icon={<ShoppingBag />} tone="blue" />
         <KpiCard label="Khách hàng" value={dashboard ? dashboard.summary.totalCustomers.toLocaleString('vi-VN') : 'Đang tải'} detail={dashboard ? `${dashboard.summary.newCustomers} mới · ${dashboard.summary.returningCustomers} quay lại` : undefined} icon={<Users />} tone="amber" />
-        <KpiCard label="Chi phí quảng cáo" value="Chưa kết nối" detail="Google · Meta · TikTok" icon={<Target />} tone="slate" />
-        <KpiCard label="ROAS tổng" value="—" detail="Cần dữ liệu spend & conversion" icon={<TrendingUp />} tone="rose" />
+        <KpiCard label="Chi phí quảng cáo" value={hasAdData ? formatCurrency(adSummary.totalSpend) : 'Chưa có dữ liệu'} detail={hasAdData ? 'Đã đồng bộ từ các kênh' : 'Google · Meta · TikTok'} icon={<Target />} tone="slate" />
+        <KpiCard label="ROAS tổng" value={hasAdData ? `${adSummary.roas}x` : '—'} detail={hasAdData ? `${adSummary.totalConversions} chuyển đổi` : 'Cần dữ liệu spend & conversion'} icon={<TrendingUp />} tone="rose" />
       </div>
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
@@ -248,7 +269,7 @@ function OverviewModule({ dashboard, startDate, endDate, setStartDate, setEndDat
         </Card>
         <Card className="p-5 shadow-sm">
           <SectionTitle icon={<Target />} title="Hiệu quả quảng cáo" subtitle="So sánh doanh thu với chi phí theo kênh" />
-          <EmptyState title="Chưa kết nối kênh quảng cáo" description="Cấu hình Google Ads, Facebook Ads và TikTok Ads để bắt đầu tính Spend, Conversion và ROAS." action="Mở Đo lường quảng cáo" />
+          {adOverview?.byPlatform?.length ? <div className="space-y-3">{adOverview.byPlatform.map((item: any) => <div key={item.platform} className="flex items-center justify-between rounded-xl border border-slate-100 p-3"><div><p className="text-sm font-bold text-slate-700">{platformLabel(item.platform)}</p><p className="text-xs text-slate-500">{item.clicks.toLocaleString('vi-VN')} clicks · {item.conversions.toLocaleString('vi-VN')} chuyển đổi</p></div><div className="text-right"><p className="font-black text-[#C41E3A]">{item.roas}x</p><p className="text-xs text-slate-500">{formatCurrency(item.spend)}</p></div></div>)}</div> : <EmptyState title="Chưa kết nối kênh quảng cáo" description="Cấu hình Google Ads, Facebook Ads và TikTok Ads để bắt đầu tính Spend, Conversion và ROAS." action="Mở Đo lường quảng cáo" />}
         </Card>
       </div>
 
@@ -271,26 +292,48 @@ function SalesModule({ orders, products, orderFilter, setOrderFilter, orderSearc
   );
 }
 
-function AdsModule() {
+function AdsModule({ adOverview }: { adOverview: any }) {
+  const adSummary = adOverview?.summary;
+  const hasAdData = Boolean(adSummary && adSummary.totalSpend > 0);
   return (
     <div className="space-y-6">
       <ModuleIntro eyebrow="ADS INTELLIGENCE" title="Đo lường quảng cáo đa kênh" description="Khu vực tập trung để theo dõi chi phí, lượt nhấp, chuyển đổi và doanh thu từ Google Ads, Facebook Ads và TikTok Ads." />
-      <Card className="border-amber-200 bg-amber-50 p-5"><div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"><div><p className="font-black text-[#8B1428]">Chưa có kết nối quảng cáo</p><p className="mt-1 text-sm text-slate-600">Giao diện đã sẵn sàng. Để hiển thị dữ liệu thật, cần thêm quyền API hoặc file đồng bộ từ từng nền tảng.</p></div><span className="rounded-full bg-white px-3 py-2 text-xs font-bold text-amber-800">Không dùng số liệu mẫu</span></div></Card>
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">{CHANNELS.map((channel) => { const Icon = channel.icon; return <Card key={channel.key} className="overflow-hidden p-0 shadow-sm"><div className={`bg-gradient-to-r ${channel.tone} p-5 text-white`}><div className="flex items-center justify-between"><span className="rounded-xl bg-white/15 p-3"><Icon className="h-6 w-6" /></span><span className="rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold">Chưa kết nối</span></div><h3 className="mt-6 text-xl font-black">{channel.label}</h3><p className="mt-1 text-sm text-white/80">{channel.description}</p></div><div className="p-5"><div className="grid grid-cols-2 gap-3 text-center"><MetricPlaceholder label="Chi phí" /><MetricPlaceholder label="Clicks" /><MetricPlaceholder label="Conversions" /><MetricPlaceholder label="ROAS" /></div><Button type="button" variant="outline" className="mt-5 w-full border-slate-200 text-slate-600" disabled>Chờ cấu hình kết nối</Button></div></Card>; })}</div>
+      <Card className={`${hasAdData ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50'} p-5`}><div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"><div><p className="font-black text-[#8B1428]">{hasAdData ? 'Đã có dữ liệu quảng cáo' : 'Chưa có kết nối quảng cáo'}</p><p className="mt-1 text-sm text-slate-600">{hasAdData ? `${adSummary.totalConversions} chuyển đổi · ${formatCurrency(adSummary.totalSpend)} chi phí · ROAS ${adSummary.roas}x` : 'Giao diện đã sẵn sàng. Để hiển thị dữ liệu thật, cần thêm quyền API hoặc file đồng bộ từ từng nền tảng.'}</p></div><span className="rounded-full bg-white px-3 py-2 text-xs font-bold text-amber-800">Không dùng số liệu mẫu</span></div></Card>
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">{CHANNELS.map((channel) => { const Icon = channel.icon; const stats = adOverview?.byPlatform?.find((item: any) => item.platform === channel.key); return <Card key={channel.key} className="overflow-hidden p-0 shadow-sm"><div className={`bg-gradient-to-r ${channel.tone} p-5 text-white`}><div className="flex items-center justify-between"><span className="rounded-xl bg-white/15 p-3"><Icon className="h-6 w-6" /></span><span className="rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold">{stats ? 'Đã đồng bộ' : 'Chưa kết nối'}</span></div><h3 className="mt-6 text-xl font-black">{channel.label}</h3><p className="mt-1 text-sm text-white/80">{channel.description}</p></div><div className="p-5"><div className="grid grid-cols-2 gap-3 text-center"><MetricPlaceholder label="Chi phí" value={stats ? formatCurrency(stats.spend) : undefined} /><MetricPlaceholder label="Clicks" value={stats ? stats.clicks.toLocaleString('vi-VN') : undefined} /><MetricPlaceholder label="Conversions" value={stats ? stats.conversions.toLocaleString('vi-VN') : undefined} /><MetricPlaceholder label="ROAS" value={stats ? `${stats.roas}x` : undefined} /></div><Button type="button" variant="outline" className="mt-5 w-full border-slate-200 text-slate-600" disabled>{stats ? 'Đã nhận dữ liệu' : 'Chờ cấu hình kết nối'}</Button></div></Card>; })}</div>
       <Card className="p-5 shadow-sm"><SectionTitle icon={<Globe2 />} title="Mô hình dữ liệu sẽ đồng bộ" subtitle="Các trường sẽ được chuẩn hóa về một dashboard duy nhất" /><div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4"><DataPill title="Campaign" text="Tên chiến dịch & nền tảng" /><DataPill title="Spend" text="Chi phí theo ngày" /><DataPill title="Conversion" text="Đơn hàng quy đổi" /><DataPill title="ROAS" text="Doanh thu / chi phí" /></div></Card>
       <Card className="p-5 shadow-sm"><SectionTitle icon={<ExternalLink />} title="Kênh chính thức của Nước Mắm Cá Vàng" subtitle="Liên kết đã đối chiếu từ các nền tảng bạn cung cấp" /><div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">{PUBLIC_CHANNELS.map((channel) => { const Icon = channel.icon; return <a key={channel.label} href={channel.url} target="_blank" rel="noreferrer" className="group flex items-center gap-3 rounded-xl border border-slate-100 p-3 transition hover:-translate-y-0.5 hover:border-[#C41E3A]/30 hover:shadow-sm"><span className={`rounded-lg p-2 ${channel.tone}`}><Icon className="h-4 w-4" /></span><span className="min-w-0 flex-1 truncate text-sm font-bold text-slate-700">{channel.label}</span><ExternalLink className="h-3.5 w-3.5 text-slate-400 transition group-hover:text-[#C41E3A]" /></a>; })}</div><p className="mt-4 text-xs leading-5 text-slate-500">Liên kết kênh công khai có thể mở ngay. Chỉ số quảng cáo, reach và conversion vẫn cần quyền API/Business tương ứng; hệ thống không hiển thị số liệu suy đoán.</p></Card>
     </div>
   );
 }
 
-function AnalyticsModule({ dashboard, products }: { dashboard: any; products: any[] }) {
+function AnalyticsModule({ dashboard, adOverview, products }: { dashboard: any; adOverview: any; products: any[] }) {
+  const adSummary = adOverview?.summary;
+  const hasAdData = Boolean(adSummary && adSummary.totalSpend > 0);
   return (
     <div className="space-y-6">
       <ModuleIntro eyebrow="REPORTING" title="Báo cáo & phân tích" description="Tập hợp các chỉ số để trả lời câu hỏi: kênh nào tạo doanh thu, sản phẩm nào bán tốt và chi phí nào đang hiệu quả." />
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3"><KpiCard label="Doanh thu thực tế" value={dashboard ? formatCurrency(dashboard.summary.totalRevenue) : '—'} icon={<CircleDollarSign />} tone="violet" /><KpiCard label="Lợi nhuận gộp" value="Chưa cấu hình" detail="Cần giá vốn sản phẩm" icon={<TrendingUp />} tone="green" /><KpiCard label="ROAS tổng" value="—" detail="Cần dữ liệu từ Ads API" icon={<Target />} tone="rose" /></div>
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-2"><Card className="p-5 shadow-sm"><SectionTitle icon={<BarChart3 />} title="Top sản phẩm theo số lượng bán" subtitle="Đơn hàng không bị hủy" />{products.length ? <div className="space-y-3">{products.slice(0, 8).map((product, index) => <div key={product.id} className="flex items-center gap-3 rounded-xl border border-slate-100 p-3"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-sm font-black text-[#C41E3A]">{index + 1}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold text-slate-800">{product.name}</p><p className="text-xs text-slate-500">{formatCurrency(Number(product.price))}</p></div><span className="text-xs font-bold text-slate-500">{product.salesCount ?? 0} đã bán</span></div>)}</div> : <EmptyState title="Chưa có dữ liệu sản phẩm" description="Sản phẩm sẽ xuất hiện sau khi có đơn hàng hợp lệ." />}</Card><Card className="p-5 shadow-sm"><SectionTitle icon={<Target />} title="ROAS theo kênh" subtitle="Chờ kết nối tài khoản quảng cáo" /><EmptyState title="Chưa đủ dữ liệu để tính ROAS" description="ROAS cần doanh thu quy đổi và chi phí thực tế từ Google, Facebook hoặc TikTok." /></Card></div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3"><KpiCard label="Doanh thu thực tế" value={dashboard ? formatCurrency(dashboard.summary.totalRevenue) : '—'} icon={<CircleDollarSign />} tone="violet" /><KpiCard label="Lợi nhuận gộp" value="Chưa cấu hình" detail="Cần giá vốn sản phẩm" icon={<TrendingUp />} tone="green" /><KpiCard label="ROAS tổng" value={hasAdData ? `${adSummary.roas}x` : '—'} detail={hasAdData ? `${formatCurrency(adSummary.totalSpend)} chi phí` : 'Cần dữ liệu từ Ads API'} icon={<Target />} tone="rose" /></div>
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-2"><Card className="p-5 shadow-sm"><SectionTitle icon={<BarChart3 />} title="Top sản phẩm theo số lượng bán" subtitle="Đơn hàng không bị hủy" />{products.length ? <div className="space-y-3">{products.slice(0, 8).map((product, index) => <div key={product.id} className="flex items-center gap-3 rounded-xl border border-slate-100 p-3"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-sm font-black text-[#C41E3A]">{index + 1}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold text-slate-800">{product.name}</p><p className="text-xs text-slate-500">{formatCurrency(Number(product.price))}</p></div><span className="text-xs font-bold text-slate-500">{product.salesCount ?? 0} đã bán</span></div>)}</div> : <EmptyState title="Chưa có dữ liệu sản phẩm" description="Sản phẩm sẽ xuất hiện sau khi có đơn hàng hợp lệ." />}</Card><Card className="p-5 shadow-sm"><SectionTitle icon={<Target />} title="ROAS theo kênh" subtitle="Chi phí và chuyển đổi theo dữ liệu đồng bộ" />{adOverview?.byPlatform?.length ? <div className="space-y-3">{adOverview.byPlatform.map((item: any) => <div key={item.platform} className="flex items-center justify-between rounded-xl border border-slate-100 p-3"><span className="text-sm font-bold text-slate-700">{platformLabel(item.platform)}</span><span className="font-black text-[#C41E3A]">{item.roas}x</span></div>)}</div> : <EmptyState title="Chưa đủ dữ liệu để tính ROAS" description="ROAS cần doanh thu quy đổi và chi phí thực tế từ Google, Facebook hoặc TikTok." />}</Card></div>
     </div>
   );
+}
+
+function OperationsLogin({ loading, onLogin }: { loading: boolean; onLogin: (username: string, password: string) => Promise<void> }) {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setError('');
+    try {
+      await onLogin(username.trim(), password);
+    } catch {
+      setError('Thông tin đăng nhập không đúng hoặc tài khoản chưa được kích hoạt.');
+    }
+  };
+
+  return <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#8B1428] via-[#C41E3A] to-[#E39B21] px-4 py-8"><Card className="w-full max-w-md border-0 p-6 shadow-2xl sm:p-8"><div className="text-center"><div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#C41E3A] to-[#8B1428] text-2xl font-black text-white">SC</div><p className="mt-5 text-xs font-black uppercase tracking-[0.25em] text-[#C41E3A]">Sa Châu Operating System</p><h1 className="mt-2 text-2xl font-black text-slate-900">Đăng nhập trang quản lý</h1><p className="mt-2 text-sm leading-5 text-slate-500">Dữ liệu đơn hàng và quảng cáo chỉ dành cho tài khoản quản trị.</p></div><form onSubmit={submit} className="mt-7 space-y-4"><label className="block text-sm font-bold text-slate-700">Tên đăng nhập<input required value={username} onChange={(event) => setUsername(event.target.value)} className="mt-1.5 block w-full rounded-xl border border-slate-200 px-3 py-3 text-sm font-normal outline-none focus:border-[#C41E3A] focus:ring-2 focus:ring-red-100" autoComplete="username" /></label><label className="block text-sm font-bold text-slate-700">Mật khẩu<input required type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="mt-1.5 block w-full rounded-xl border border-slate-200 px-3 py-3 text-sm font-normal outline-none focus:border-[#C41E3A] focus:ring-2 focus:ring-red-100" autoComplete="current-password" /></label>{error && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">{error}</p>}<Button type="submit" className="w-full bg-[#C41E3A] py-6 text-sm font-black hover:bg-[#8B1428]" disabled={loading}>{loading ? 'Đang xác thực…' : 'Đăng nhập dashboard'}</Button></form><p className="mt-5 text-center text-xs leading-5 text-slate-400">Không có tài khoản? Hãy dùng tài khoản quản trị hiện có trong Admin Panel.</p></Card></div>;
 }
 
 function ModuleIntro({ eyebrow, title, description }: { eyebrow: string; title: string; description: string }) {
@@ -320,8 +363,12 @@ function InsightRow({ label, value, tone }: { label: string; value: string; tone
   return <div className="flex items-center justify-between rounded-xl border border-slate-100 p-3"><span className="text-sm text-slate-600">{label}</span><span className={`rounded-full px-3 py-1 text-xs font-bold ${toneClass}`}>{value}</span></div>;
 }
 
-function MetricPlaceholder({ label }: { label: string }) {
-  return <div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</p><p className="mt-1 text-lg font-black text-slate-300">—</p></div>;
+function MetricPlaceholder({ label, value }: { label: string; value?: string }) {
+  return <div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</p><p className={`mt-1 text-lg font-black ${value ? 'text-slate-700' : 'text-slate-300'}`}>{value ?? '—'}</p></div>;
+}
+
+function platformLabel(platform: string) {
+  return platform === 'google' ? 'Google Ads' : platform === 'facebook' ? 'Facebook Ads' : platform === 'tiktok' ? 'TikTok Ads' : platform;
 }
 
 function DataPill({ title, text }: { title: string; text: string }) {

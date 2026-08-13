@@ -9,3 +9,11 @@ Khu vực quảng cáo hiển thị rõ trạng thái **Chưa kết nối** cho 
 ## Kết quả kiểm tra kênh
 
 Facebook Page và website gosa.com.vn mở được. Instagram chuyển về màn hình đăng nhập và TikTok không tải nội dung profile trong môi trường kiểm tra, vì vậy chỉ gắn liên kết công khai và không suy đoán số liệu. Link share.google người dùng cung cấp trả về lỗi URL không khả dụng; dashboard dùng link Maps đã xác nhận từ website/Facebook cho đến khi có Place URL chuẩn.
+
+## Bảo vệ truy cập
+
+Route `/operations` hiện có lớp đăng nhập riêng bằng tài khoản quản trị hiện có của Admin Panel; giao diện dashboard không nên mở cho người chưa xác thực. Phiên preview đang giữ token quản trị cũ nên hiển thị dashboard và dữ liệu thật; thao tác kiểm tra nút đăng xuất trong browser preview không chuyển trạng thái ổn định do session preview/HMR, nhưng code đã xóa `adminToken` và `adminUsername` khỏi localStorage trước khi quay lại màn hình login. TypeScript không lỗi sau khi thêm wrapper xác thực.
+
+## Ads backend
+
+Đã tạo migration `drizzle/0006_neat_switch.sql` và áp dụng thành công hai bảng `adCampaigns` và `adMetrics`. Đã thêm helper `getAdCampaignOverview`, `upsertAdCampaign`, `insertAdMetric` và tRPC query `analytics.getAds`; dữ liệu tổng hợp có spend, impressions, clicks, conversions, conversionValue, CTR, CPC, CPM và ROAS theo tổng quan/nền tảng/chiến dịch/ngày. Chưa có bản ghi quảng cáo vì chưa được cấp quyền API và không chèn dữ liệu mẫu.

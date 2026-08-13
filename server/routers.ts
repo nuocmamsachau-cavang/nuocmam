@@ -5,7 +5,7 @@ import { publicProcedure, router } from "./_core/trpc";
 import { notifyOwner } from "./_core/notification";
 import { storagePut } from "./storage";
 import { z } from "zod";
-import { getCategories, getCategoryById, getAllProducts, getProductRatingSummary, getProductById, updateProduct, deleteProduct, createProduct, getSeoMetadata, createOrder, getOrders, getAdminByUsername, getDb, getPromotions, createPromotion, updatePromotion, deletePromotion, getEmailConfig, saveEmailConfig, getBlogPosts, getBlogPostBySlug, createBlogPost, updateBlogPost, deleteBlogPost, getAllBlogPosts, getProductReviews, getApprovedReviews, createProductReview, getAllProductReviews, approveProductReview, setProductReviewApproval, getProductImages, getProductImageById, getBrandAssets, updateBrandAsset, createProductImage, updateProductImage, deleteProductImage, getSessionId, setSessionId, getLastDeploymentTime, setLastDeploymentTime, getDashboardMetrics } from "./db";
+import { getCategories, getCategoryById, getAllProducts, getProductRatingSummary, getProductById, updateProduct, deleteProduct, createProduct, getSeoMetadata, createOrder, getOrders, getAdminByUsername, getDb, getPromotions, createPromotion, updatePromotion, deletePromotion, getEmailConfig, saveEmailConfig, getBlogPosts, getBlogPostBySlug, createBlogPost, updateBlogPost, deleteBlogPost, getAllBlogPosts, getProductReviews, getApprovedReviews, createProductReview, getAllProductReviews, approveProductReview, setProductReviewApproval, getProductImages, getProductImageById, getBrandAssets, updateBrandAsset, createProductImage, updateProductImage, deleteProductImage, getSessionId, setSessionId, getLastDeploymentTime, setLastDeploymentTime, getDashboardMetrics, getAdCampaignOverview } from "./db";
 import { hashPassword, verifyPassword, generateAdminToken } from "./auth";
 import { categories, products, seoMetadata, orders, adminUsers, promotions, emailConfig, blogPosts, productReviews, productImages } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
@@ -246,6 +246,12 @@ export const appRouter = router({
         endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
       }).optional())
       .query(({ input }) => getDashboardMetrics(input ?? {})),
+    getAds: publicProcedure
+      .input(z.object({
+        startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+        endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      }).optional())
+      .query(({ input }) => getAdCampaignOverview(input ?? {})),
   }),
 
   // Blog Posts

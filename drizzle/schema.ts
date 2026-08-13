@@ -211,3 +211,41 @@ export const websiteSettings = mysqlTable("websiteSettings", {
 
 export type WebsiteSetting = typeof websiteSettings.$inferSelect;
 export type InsertWebsiteSetting = typeof websiteSettings.$inferInsert;
+
+// Advertising Campaigns
+export const adCampaigns = mysqlTable("adCampaigns", {
+  id: int("id").autoincrement().primaryKey(),
+  platform: mysqlEnum("platform", ["google", "facebook", "tiktok"]).notNull(),
+  externalId: varchar("externalId", { length: 255 }).notNull(),
+  accountId: varchar("accountId", { length: 255 }),
+  name: varchar("name", { length: 255 }).notNull(),
+  status: mysqlEnum("status", ["active", "paused", "ended", "unknown"]).notNull().default("unknown"),
+  objective: varchar("objective", { length: 255 }),
+  isActive: boolean("isActive").notNull().default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AdCampaign = typeof adCampaigns.$inferSelect;
+export type InsertAdCampaign = typeof adCampaigns.$inferInsert;
+
+// Daily Advertising Metrics
+export const adMetrics = mysqlTable("adMetrics", {
+  id: int("id").autoincrement().primaryKey(),
+  campaignId: int("campaignId").notNull(),
+  metricDate: timestamp("metricDate").notNull(),
+  spend: decimal("spend", { precision: 12, scale: 2 }).notNull().default("0"),
+  impressions: int("impressions").notNull().default(0),
+  clicks: int("clicks").notNull().default(0),
+  conversions: int("conversions").notNull().default(0),
+  conversionValue: decimal("conversionValue", { precision: 12, scale: 2 }).notNull().default("0"),
+  ctr: decimal("ctr", { precision: 8, scale: 4 }).notNull().default("0"),
+  cpc: decimal("cpc", { precision: 12, scale: 4 }).notNull().default("0"),
+  cpm: decimal("cpm", { precision: 12, scale: 4 }).notNull().default("0"),
+  rawData: text("rawData"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AdMetric = typeof adMetrics.$inferSelect;
+export type InsertAdMetric = typeof adMetrics.$inferInsert;

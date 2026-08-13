@@ -15,6 +15,7 @@ import DomainManagement from "./pages/DomainManagement";
 import ProductDetail from "./pages/ProductDetail";
 import Blog from "./pages/Blog";
 import BlogPostDetail from "./pages/BlogPostDetail";
+import SaChauOperations from "./pages/SaChauOperations";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -26,6 +27,7 @@ function Router() {
       <Route path={"/blog/:slug"} component={BlogPostDetail} />
       <Route path={"/blog"} component={Blog} />
       <Route path={"/admin"} component={AdminPanel} />
+      <Route path={"/operations"} component={SaChauOperations} />
       <Route path={"/order-confirmation"} component={OrderConfirmation} />
       <Route path={"/admin/domain"} component={DomainManagement} />
       <Route path={"/404"} component={NotFound} />

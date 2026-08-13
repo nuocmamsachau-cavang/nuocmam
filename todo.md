@@ -394,3 +394,11 @@
 - [x] Add date/status filters and a responsive red-gold admin layout
 - [x] Add tests for dashboard aggregation and filter behavior
 - [x] Run TypeScript, Vitest, build and browser verification, then save a checkpoint
+
+## Phase 37: Independent Sa Chau Operations & Ads Management System
+- [x] Design standalone management architecture for Nước Mắm Sa Châu (separate from main admin panel)
+- [ ] Implement multi-channel advertising campaign tracking schema for Google Ads, Facebook Ads and TikTok Ads
+- [x] Build a dedicated operations dashboard with revenue, orders, ROAS and cross-platform ad spend analytics
+- [ ] Wire database helpers and tRPC procedures for campaign and order metrics
+- [x] Add verified public links for Facebook, website, Instagram, TikTok and Google Maps
+- [x] Run Vitest specs, TypeScript checks, and browser verification; hold checkpoint until ad API credentials are available

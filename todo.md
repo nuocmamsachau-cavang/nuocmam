@@ -423,3 +423,5 @@
 - [ ] Thiết lập auto-deploy từ GitHub branch product-feed-live sau khi môi trường hoạt động
 - [ ] Bảo đảm không tiếp tục phụ thuộc Manus API publish trong quy trình cập nhật mã nguồn
     
+- [ ] Sửa entrypoint `api/index.ts` dùng import ESM có phần mở rộng để Vercel tìm thấy server bundle
+- [ ] Triển khai lại Vercel và xác minh toàn bộ API không còn FUNCTION_INVOCATION_FAILED

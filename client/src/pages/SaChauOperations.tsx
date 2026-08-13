@@ -37,7 +37,7 @@ import {
   YAxis,
 } from 'recharts';
 
-type ModuleKey = 'overview' | 'sales' | 'ads' | 'analytics';
+type ModuleKey = 'overview' | 'sales' | 'ads' | 'analytics' | 'feed';
 type OrderFilter = 'all' | 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
 
 const MODULES: Array<{ key: ModuleKey; label: string; icon: typeof Gauge; description: string }> = [
@@ -45,6 +45,7 @@ const MODULES: Array<{ key: ModuleKey; label: string; icon: typeof Gauge; descri
   { key: 'sales', label: 'Bán hàng & đơn hàng', icon: ShoppingBag, description: 'Đơn hàng, khách hàng, sản phẩm' },
   { key: 'ads', label: 'Đo lường quảng cáo', icon: Target, description: 'Google, Facebook, TikTok' },
   { key: 'analytics', label: 'Báo cáo & phân tích', icon: BarChart3, description: 'Doanh thu, chi phí, ROAS' },
+  { key: 'feed', label: 'Đồng bộ danh mục', icon: Package, description: 'Google Merchant, Meta & TikTok' },
 ];
 
 const STATUS_LABELS: Record<OrderFilter, string> = {
@@ -217,6 +218,7 @@ function SaChauOperationsWorkspace({ onLogout }: { onLogout: () => void }) {
             {activeModule === 'sales' && <SalesModule orders={filteredOrders} products={productsQuery.data ?? []} orderFilter={orderFilter} setOrderFilter={setOrderFilter} orderSearch={orderSearch} setOrderSearch={setOrderSearch} loading={ordersQuery.isLoading} />}
             {activeModule === 'ads' && <AdsModule adOverview={adsQuery.data} />}
             {activeModule === 'analytics' && <AnalyticsModule dashboard={dashboard} adOverview={adsQuery.data} products={productsQuery.data ?? []} />}
+            {activeModule === 'feed' && <FeedModule products={productsQuery.data ?? []} />}
           </div>
         </main>
       </div>
@@ -314,6 +316,115 @@ function AnalyticsModule({ dashboard, adOverview, products }: { dashboard: any; 
       <ModuleIntro eyebrow="REPORTING" title="Báo cáo & phân tích" description="Tập hợp các chỉ số để trả lời câu hỏi: kênh nào tạo doanh thu, sản phẩm nào bán tốt và chi phí nào đang hiệu quả." />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3"><KpiCard label="Doanh thu thực tế" value={dashboard ? formatCurrency(dashboard.summary.totalRevenue) : '—'} icon={<CircleDollarSign />} tone="violet" /><KpiCard label="Lợi nhuận gộp" value="Chưa cấu hình" detail="Cần giá vốn sản phẩm" icon={<TrendingUp />} tone="green" /><KpiCard label="ROAS tổng" value={hasAdData ? `${adSummary.roas}x` : '—'} detail={hasAdData ? `${formatCurrency(adSummary.totalSpend)} chi phí` : 'Cần dữ liệu từ Ads API'} icon={<Target />} tone="rose" /></div>
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-2"><Card className="p-5 shadow-sm"><SectionTitle icon={<BarChart3 />} title="Top sản phẩm theo số lượng bán" subtitle="Đơn hàng không bị hủy" />{products.length ? <div className="space-y-3">{products.slice(0, 8).map((product, index) => <div key={product.id} className="flex items-center gap-3 rounded-xl border border-slate-100 p-3"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-sm font-black text-[#C41E3A]">{index + 1}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold text-slate-800">{product.name}</p><p className="text-xs text-slate-500">{formatCurrency(Number(product.price))}</p></div><span className="text-xs font-bold text-slate-500">{product.salesCount ?? 0} đã bán</span></div>)}</div> : <EmptyState title="Chưa có dữ liệu sản phẩm" description="Sản phẩm sẽ xuất hiện sau khi có đơn hàng hợp lệ." />}</Card><Card className="p-5 shadow-sm"><SectionTitle icon={<Target />} title="ROAS theo kênh" subtitle="Chi phí và chuyển đổi theo dữ liệu đồng bộ" />{adOverview?.byPlatform?.length ? <div className="space-y-3">{adOverview.byPlatform.map((item: any) => <div key={item.platform} className="flex items-center justify-between rounded-xl border border-slate-100 p-3"><span className="text-sm font-bold text-slate-700">{platformLabel(item.platform)}</span><span className="font-black text-[#C41E3A]">{item.roas}x</span></div>)}</div> : <EmptyState title="Chưa đủ dữ liệu để tính ROAS" description="ROAS cần doanh thu quy đổi và chi phí thực tế từ Google, Facebook hoặc TikTok." />}</Card></div>
+    </div>
+  );
+}
+
+function FeedModule({ products }: { products: any[] }) {
+  const [copied, setCopied] = useState(false);
+  const feedUrl = `${window.location.origin}/api/product-feed.xml`;
+
+  const copyFeedUrl = () => {
+    navigator.clipboard.writeText(feedUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="space-y-6">
+      <ModuleIntro eyebrow="PRODUCT FEED" title="Đồng bộ danh mục sản phẩm" description="Nguồn cấp dữ liệu chuẩn XML kết nối tự động danh mục Nước Mắm Cá Vàng với Google Merchant Center, Meta Commerce Manager và TikTok Catalog." />
+      
+      <Card className="p-6 shadow-sm border-emerald-200 bg-emerald-50/50">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800">
+              <span className="h-2 w-2 rounded-full bg-emerald-600 animate-pulse" />
+              Feed đang hoạt động trực tuyến
+            </span>
+            <h4 className="mt-2 text-base font-black text-slate-900">URL Nguồn cấp dữ liệu (Product Feed URL)</h4>
+            <p className="mt-1 text-sm text-slate-600">Sử dụng liên kết này để dán vào Google Merchant, Meta và TikTok để tự động đồng bộ giá, tên và hình ảnh sản phẩm.</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <a href={feedUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm border border-slate-200 hover:bg-slate-50">
+              <ExternalLink className="h-4 w-4 text-[#C41E3A]" /> Xem XML Feed
+            </a>
+            <Button type="button" onClick={copyFeedUrl} className="bg-[#C41E3A] hover:bg-[#8B1428] text-xs font-bold">
+              {copied ? 'Đã sao chép!' : 'Sao chép URL Feed'}
+            </Button>
+          </div>
+        </div>
+        <div className="mt-4 rounded-xl bg-white p-3 font-mono text-xs text-slate-700 border border-emerald-100 select-all overflow-x-auto">
+          {feedUrl}
+        </div>
+      </Card>
+
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <Card className="p-5 shadow-sm border-slate-200">
+          <div className="flex items-center justify-between">
+            <span className="rounded-xl bg-blue-50 p-3 text-blue-600"><Globe2 className="h-5 w-5" /></span>
+            <span className="rounded-full bg-blue-100 px-3 py-1 text-[11px] font-bold text-blue-800">Sẵn sàng nạp</span>
+          </div>
+          <h4 className="mt-4 text-base font-black text-slate-900">Google Merchant Center</h4>
+          <p className="mt-1 text-xs text-slate-500 leading-5">Dùng cho Google Shopping Ads và tìm kiếm sản phẩm trên Google.</p>
+          <div className="mt-4 rounded-xl bg-slate-50 p-3 text-xs text-slate-600">
+            <p className="font-bold">Trạng thái: Chờ khai báo URL</p>
+            <p className="mt-0.5 text-slate-400">Tự động cập nhật mỗi 24h</p>
+          </div>
+        </Card>
+
+        <Card className="p-5 shadow-sm border-slate-200">
+          <div className="flex items-center justify-between">
+            <span className="rounded-xl bg-indigo-50 p-3 text-indigo-600"><Facebook className="h-5 w-5" /></span>
+            <span className="rounded-full bg-indigo-100 px-3 py-1 text-[11px] font-bold text-indigo-800">Sẵn sàng nạp</span>
+          </div>
+          <h4 className="mt-4 text-base font-black text-slate-900">Meta Commerce Manager</h4>
+          <p className="mt-1 text-xs text-slate-500 leading-5">Đồng bộ sản phẩm lên Shop trên Facebook Page và Instagram.</p>
+          <div className="mt-4 rounded-xl bg-slate-50 p-3 text-xs text-slate-600">
+            <p className="font-bold">Trạng thái: Chờ kết nối Data Feed</p>
+            <p className="mt-0.5 text-slate-400">Hỗ trợ quảng cáo động Dynamic Ads</p>
+          </div>
+        </Card>
+
+        <Card className="p-5 shadow-sm border-slate-200">
+          <div className="flex items-center justify-between">
+            <span className="rounded-xl bg-slate-100 p-3 text-slate-800"><Activity className="h-5 w-5" /></span>
+            <span className="rounded-full bg-slate-200 px-3 py-1 text-[11px] font-bold text-slate-800">Sẵn sàng nạp</span>
+          </div>
+          <h4 className="mt-4 text-base font-black text-slate-900">TikTok Catalog Manager</h4>
+          <p className="mt-1 text-xs text-slate-500 leading-5">Đồng bộ danh mục để chạy TikTok Shopping Ads & Spark Ads.</p>
+          <div className="mt-4 rounded-xl bg-slate-50 p-3 text-xs text-slate-600">
+            <p className="font-bold">Trạng thái: Chờ thêm Scheduled Feed</p>
+            <p className="mt-0.5 text-slate-400">Đồng bộ giá & tồn kho tự động</p>
+          </div>
+        </Card>
+      </div>
+
+      <Card className="p-5 shadow-sm">
+        <SectionTitle icon={<Package />} title="Danh sách sản phẩm hiện có trong Feed" subtitle={`${products.length} sản phẩm đang được phục vụ qua URL XML`} />
+        {products.length ? (
+          <div className="divide-y divide-slate-100">
+            {products.map((product: any) => (
+              <div key={product.id} className="flex items-center justify-between py-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 overflow-hidden rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center">
+                    {product.imageUrl ? <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" /> : <Package className="h-5 w-5 text-slate-400" />}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-800">{product.name}</p>
+                    <p className="text-xs text-slate-400">ID: gosa_{product.id} · Danh mục ID: {product.categoryId}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-black text-[#C41E3A]">{formatCurrency(Number(product.price))}</p>
+                  <span className="inline-flex rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700">Đang bán</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <EmptyState title="Chưa có sản phẩm" description="Hãy thêm sản phẩm trong Admin Panel để cấp dữ liệu cho các kênh." />
+        )}
+      </Card>
     </div>
   );
 }

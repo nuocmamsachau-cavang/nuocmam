@@ -106,6 +106,45 @@ export async function createApp(options: AppOptions = {}) {
     }
   });
 
+  app.get('/api/product-feed.xml', async (req, res) => {
+    try {
+      const { getAllProducts } = await import('../db.js');
+      const products = await getAllProducts();
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+      xml += `<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">\n`;
+      xml += `  <channel>\n`;
+      xml += `    <title>Nước Mắm Cá Vàng - Product Feed</title>\n`;
+      xml += `    <link>${baseUrl}</link>\n`;
+      xml += `    <description>Nguồn cấp dữ liệu sản phẩm chuẩn Google Merchant, Meta Commerce &amp; TikTok Catalog</description>\n`;
+      
+      for (const p of products) {
+        const productUrl = `${baseUrl}/product/${p.id}`;
+        const imageUrl = p.imageUrl ? (p.imageUrl.startsWith('http') ? p.imageUrl : `${baseUrl}${p.imageUrl}`) : `${baseUrl}/favicon.ico`;
+        xml += `    <item>\n`;
+        xml += `      <g:id>gosa_${p.id}</g:id>\n`;
+        xml += `      <title><![CDATA[${p.name}]]></title>\n`;
+        xml += `      <link>${productUrl}</link>\n`;
+        xml += `      <description><![CDATA[${p.description || p.name}]]></description>\n`;
+        xml += `      <g:image_link>${imageUrl}</g:image_link>\n`;
+        xml += `      <g:price>${p.price} VND</g:price>\n`;
+        xml += `      <g:condition>new</g:condition>\n`;
+        xml += `      <g:availability>${p.isActive ? 'in stock' : 'out of stock'}</g:availability>\n`;
+        xml += `      <g:brand>Nước Mắm Cá Vàng Sa Châu</g:brand>\n`;
+        xml += `    </item>\n`;
+      }
+      
+      xml += `  </channel>\n`;
+      xml += `</rss>`;
+      
+      res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+      res.send(xml);
+    } catch (error) {
+      res.status(500).send(`<?xml version="1.0"?><error>${error instanceof Error ? error.message : 'Error generating feed'}</error>`);
+    }
+  });
+
   app.use('/api/trpc', createExpressMiddleware({ router: appRouter, createContext }));
 
   if (!options.vercel && process.env.NODE_ENV === 'development' && server) {

@@ -5,7 +5,7 @@ import { publicProcedure, router } from "./_core/trpc";
 import { notifyOwner } from "./_core/notification";
 import { storagePut } from "./storage";
 import { z } from "zod";
-import { getCategories, getCategoryById, getAllProducts, getProductRatingSummary, getProductById, updateProduct, deleteProduct, createProduct, getSeoMetadata, createOrder, getOrders, getAdminByUsername, getDb, getPromotions, createPromotion, updatePromotion, deletePromotion, getEmailConfig, saveEmailConfig, getBlogPosts, getBlogPostBySlug, createBlogPost, updateBlogPost, deleteBlogPost, getAllBlogPosts, getProductReviews, getApprovedReviews, createProductReview, getAllProductReviews, approveProductReview, setProductReviewApproval, getProductImages, getProductImageById, getBrandAssets, updateBrandAsset, createProductImage, updateProductImage, deleteProductImage, getSessionId, setSessionId, getLastDeploymentTime, setLastDeploymentTime } from "./db";
+import { getCategories, getCategoryById, getAllProducts, getProductRatingSummary, getProductById, updateProduct, deleteProduct, createProduct, getSeoMetadata, createOrder, getOrders, getAdminByUsername, getDb, getPromotions, createPromotion, updatePromotion, deletePromotion, getEmailConfig, saveEmailConfig, getBlogPosts, getBlogPostBySlug, createBlogPost, updateBlogPost, deleteBlogPost, getAllBlogPosts, getProductReviews, getApprovedReviews, createProductReview, getAllProductReviews, approveProductReview, setProductReviewApproval, getProductImages, getProductImageById, getBrandAssets, updateBrandAsset, createProductImage, updateProductImage, deleteProductImage, getSessionId, setSessionId, getLastDeploymentTime, setLastDeploymentTime, getDashboardMetrics } from "./db";
 import { hashPassword, verifyPassword, generateAdminToken } from "./auth";
 import { categories, products, seoMetadata, orders, adminUsers, promotions, emailConfig, blogPosts, productReviews, productImages } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
@@ -240,31 +240,12 @@ export const appRouter = router({
 
   // Analytics
   analytics: router({
-    getDashboard: publicProcedure.query(async () => {
-      const db = await getDb();
-      if (!db) return null;
-      
-      const allOrders = await getOrders();
-      const totalOrders = allOrders.length;
-      const totalRevenue = allOrders.reduce((sum: number, order: any) => {
-        const amount = parseFloat(order.totalAmount);
-        return sum + (isNaN(amount) ? 0 : amount);
-      }, 0);
-      
-      const recentOrders = allOrders.slice(0, 5);
-      
-      return {
-        totalOrders,
-        totalRevenue: totalRevenue.toFixed(2),
-        recentOrders,
-        stats: {
-          pending: allOrders.filter((o: any) => o.status === 'pending').length,
-          confirmed: allOrders.filter((o: any) => o.status === 'confirmed').length,
-          shipped: allOrders.filter((o: any) => o.status === 'shipped').length,
-          delivered: allOrders.filter((o: any) => o.status === 'delivered').length,
-        }
-      };
-    }),
+    getDashboard: publicProcedure
+      .input(z.object({
+        startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+        endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      }).optional())
+      .query(({ input }) => getDashboardMetrics(input ?? {})),
   }),
 
   // Blog Posts

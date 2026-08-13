@@ -386,3 +386,11 @@
 - [x] Replace incorrect “Cá Lục” labels with “Cá Nục” where the product/category refers to cá nục
 - [x] Verify product names/descriptions and SEO copy remain consistent after correction
 - [x] Run tests, build and preview verification, then save a checkpoint
+
+## Phase 36: Sa Chau Operations Dashboard
+- [x] Add a Sa Chau operations dashboard modeled on the reference UX without copying its branding or data
+- [x] Add real KPI summaries for revenue, orders, products, customers and approved reviews
+- [x] Add real time-series/order-status/sales analytics from existing database records
+- [x] Add date/status filters and a responsive red-gold admin layout
+- [x] Add tests for dashboard aggregation and filter behavior
+- [x] Run TypeScript, Vitest, build and browser verification, then save a checkpoint

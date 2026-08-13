@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, categories, products, seoMetadata, orders, adminUsers, promotions, emailConfig, blogPosts, productReviews, productImages, ProductImage, websiteSettings, WebsiteSetting } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { getApprovedRatingSummary, matchesOrderStatus, matchesProductFilters, paginateItems, sortProducts, ProductSortOption, OrderStatus } from '../shared/catalogFeatures';
+import { buildDashboardMetrics, DashboardDateFilter } from '../shared/dashboardFeatures';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -201,6 +202,17 @@ export async function getOrders(status: OrderStatus = 'all') {
   if (!db) return [];
   const rows = await db.select().from(orders).orderBy(desc(orders.createdAt));
   return rows.filter((order) => matchesOrderStatus(order, status));
+}
+
+export async function getDashboardMetrics(filter: DashboardDateFilter = {}) {
+  const db = await getDb();
+  if (!db) return buildDashboardMetrics([], [], [], filter);
+  const [orderRows, productRows, reviewRows] = await Promise.all([
+    db.select().from(orders).orderBy(desc(orders.createdAt)),
+    db.select({ id: products.id, name: products.name, price: products.price, isActive: products.isActive }).from(products),
+    db.select({ rating: productReviews.rating, isApproved: productReviews.isApproved }).from(productReviews),
+  ]);
+  return buildDashboardMetrics(orderRows, productRows, reviewRows, filter);
 }
 
 // Admin User Queries

@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Filter, LogOut, Plus, Edit2, Trash2, Save, Loader } from 'lucide-react';
+import SaChauDashboard from '@/components/SaChauDashboard';
 
 interface AdminState {
   token: string | null;
@@ -716,7 +717,8 @@ export default function AdminPanel() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
         <Tabs defaultValue="products" className="w-full">
-          <TabsList className="grid w-full grid-cols-10 mb-6 text-xs md:text-sm">
+          <TabsList className="grid w-full grid-cols-2 gap-1 mb-6 text-xs sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-11 md:text-sm">
+            <TabsTrigger value="dashboard">Tổng Quan</TabsTrigger>
             <TabsTrigger value="products">Sản Phẩm</TabsTrigger>
             <TabsTrigger value="categories">Danh Mục</TabsTrigger>
             <TabsTrigger value="orders">Đơn Hàng</TabsTrigger>
@@ -728,6 +730,11 @@ export default function AdminPanel() {
             <TabsTrigger value="reviews">Đánh Giá</TabsTrigger>
             <TabsTrigger value="brand">Thương Hiệu</TabsTrigger>
           </TabsList>
+
+          {/* Sa Chau Operations Dashboard */}
+          <TabsContent value="dashboard" className="space-y-6">
+            <SaChauDashboard />
+          </TabsContent>
 
           {/* Products Tab */}
           <TabsContent value="products" className="space-y-6">

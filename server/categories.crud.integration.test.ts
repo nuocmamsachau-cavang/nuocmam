@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { getDb } from './db';
-import { categories } from '../drizzle/schema';
+import { getDb } from './db.js';
+import { categories } from '../drizzle/schema.js';
 import { eq } from 'drizzle-orm';
 
 describe('Category CRUD Integration Tests', () => {

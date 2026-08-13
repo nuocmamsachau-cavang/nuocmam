@@ -425,3 +425,5 @@
     
 - [ ] Sửa entrypoint `api/index.ts` dùng import ESM có phần mở rộng để Vercel tìm thấy server bundle
 - [ ] Triển khai lại Vercel và xác minh toàn bộ API không còn FUNCTION_INVOCATION_FAILED
+- [ ] Chuẩn hóa toàn bộ relative imports trong server thành phần mở rộng `.js` để Node ESM trên Vercel không lỗi module not found
+- [ ] Triển khai lại và kiểm tra product feed cùng tRPC trên deployment mới

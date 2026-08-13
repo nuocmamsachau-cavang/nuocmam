@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildDashboardMetrics } from '../shared/dashboardFeatures';
+import { buildDashboardMetrics } from '../shared/dashboardFeatures.js';
 
 describe('Sa Chau dashboard aggregation', () => {
   const products = [

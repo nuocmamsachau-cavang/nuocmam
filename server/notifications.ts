@@ -1,4 +1,4 @@
-import { notifyOwner } from "./_core/notification";
+import { notifyOwner } from "./_core/notification.js";
 
 export interface OrderNotificationData {
   orderNumber: string;

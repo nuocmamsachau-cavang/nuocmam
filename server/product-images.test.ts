@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { getDb } from './db';
-import { productImages, products } from '../drizzle/schema';
+import { getDb } from './db.js';
+import { productImages, products } from '../drizzle/schema.js';
 import { eq } from 'drizzle-orm';
 
 describe('Product Images Management', () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { BRAND_ASSET_KEYS, getBrandAsset, getHeroStyle, getPublicBrandConfig, DEFAULT_MASCOT_LOGO, DEFAULT_SITE_TITLE } from '../client/src/lib/brandAssets';
-import { getBrandAssets } from './db';
+import { BRAND_ASSET_KEYS, getBrandAsset, getHeroStyle, getPublicBrandConfig, DEFAULT_MASCOT_LOGO, DEFAULT_SITE_TITLE } from '../client/src/lib/brandAssets.js';
+import { getBrandAssets } from './db.js';
 
 describe('Brand Library asset helpers', () => {
   it('reads stored brand assets without failing on the reserved key column', async () => {

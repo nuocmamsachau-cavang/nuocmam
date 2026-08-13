@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { getDb } from "./db";
-import { categories, products } from "../drizzle/schema";
+import { getDb } from "./db.js";
+import { categories, products } from "../drizzle/schema.js";
 import { eq } from "drizzle-orm";
 
 describe("Category Management Operations", () => {

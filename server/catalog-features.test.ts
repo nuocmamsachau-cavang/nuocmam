@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getApprovedRatingSummary, matchesOrderStatus, matchesProductFilters, paginateItems, sortProducts } from '../shared/catalogFeatures';
+import { getApprovedRatingSummary, matchesOrderStatus, matchesProductFilters, paginateItems, sortProducts } from '../shared/catalogFeatures.js';
 
 describe('catalog feature helpers', () => {
   it('filters products by Vietnamese keyword across name and description', () => {

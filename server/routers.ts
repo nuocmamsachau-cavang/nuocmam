@@ -1,14 +1,14 @@
 import { COOKIE_NAME } from "@shared/const";
-import { getSessionCookieOptions } from "./_core/cookies";
-import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router } from "./_core/trpc";
-import { notifyOwner } from "./_core/notification";
-import { storagePut } from "./storage";
+import { getSessionCookieOptions } from "./_core/cookies.js";
+import { systemRouter } from "./_core/systemRouter.js";
+import { publicProcedure, router } from "./_core/trpc.js";
+import { notifyOwner } from "./_core/notification.js";
+import { storagePut } from "./storage.js";
 import { z } from "zod";
-import { fetchLegacyTrpc, hasLocalDatabase } from "./legacyData";
-import { getCategories, getCategoryById, getAllProducts, getProductRatingSummary, getProductById, updateProduct, deleteProduct, createProduct, getSeoMetadata, createOrder, getOrders, getAdminByUsername, getDb, getPromotions, createPromotion, updatePromotion, deletePromotion, getEmailConfig, saveEmailConfig, getBlogPosts, getBlogPostBySlug, createBlogPost, updateBlogPost, deleteBlogPost, getAllBlogPosts, getProductReviews, getApprovedReviews, createProductReview, getAllProductReviews, approveProductReview, setProductReviewApproval, getProductImages, getProductImageById, getBrandAssets, updateBrandAsset, createProductImage, updateProductImage, deleteProductImage, getSessionId, setSessionId, getLastDeploymentTime, setLastDeploymentTime, getDashboardMetrics, getAdCampaignOverview } from "./db";
-import { hashPassword, verifyPassword, generateAdminToken } from "./auth";
-import { categories, products, seoMetadata, orders, adminUsers, promotions, emailConfig, blogPosts, productReviews, productImages } from "../drizzle/schema";
+import { fetchLegacyTrpc, hasLocalDatabase } from "./legacyData.js";
+import { getCategories, getCategoryById, getAllProducts, getProductRatingSummary, getProductById, updateProduct, deleteProduct, createProduct, getSeoMetadata, createOrder, getOrders, getAdminByUsername, getDb, getPromotions, createPromotion, updatePromotion, deletePromotion, getEmailConfig, saveEmailConfig, getBlogPosts, getBlogPostBySlug, createBlogPost, updateBlogPost, deleteBlogPost, getAllBlogPosts, getProductReviews, getApprovedReviews, createProductReview, getAllProductReviews, approveProductReview, setProductReviewApproval, getProductImages, getProductImageById, getBrandAssets, updateBrandAsset, createProductImage, updateProductImage, deleteProductImage, getSessionId, setSessionId, getLastDeploymentTime, setLastDeploymentTime, getDashboardMetrics, getAdCampaignOverview } from "./db.js";
+import { hashPassword, verifyPassword, generateAdminToken } from "./auth.js";
+import { categories, products, seoMetadata, orders, adminUsers, promotions, emailConfig, blogPosts, productReviews, productImages } from "../drizzle/schema.js";
 import { eq } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 

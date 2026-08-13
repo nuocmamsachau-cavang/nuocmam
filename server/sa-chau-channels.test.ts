@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PUBLIC_CHANNELS } from '../client/src/pages/SaChauOperations';
+import { PUBLIC_CHANNELS } from '../client/src/pages/SaChauOperations.js';
 
 describe('Sa Chau public channel links', () => {
   it('keeps the five verified public channels available in the operations dashboard', () => {

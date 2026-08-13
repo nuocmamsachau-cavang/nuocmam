@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { generateOrderEmailHTML, generateZaloMessage } from "./notifications";
+import { generateOrderEmailHTML, generateZaloMessage } from "./notifications.js";
 
 describe("Order Notifications", () => {
   const mockOrder = {

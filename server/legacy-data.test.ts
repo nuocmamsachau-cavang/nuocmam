@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildLegacyTrpcUrl, unwrapLegacyTrpcResponse } from './legacyData';
+import { buildLegacyTrpcUrl, unwrapLegacyTrpcResponse } from './legacyData.js';
 
 describe('legacy data fallback', () => {
   it('builds a tRPC URL with the standard JSON input envelope', () => {

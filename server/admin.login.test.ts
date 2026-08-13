@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeAll } from "vitest";
-import { hashPassword, verifyPassword, generateAdminToken, verifyAdminToken } from "./auth";
+import { hashPassword, verifyPassword, generateAdminToken, verifyAdminToken } from "./auth.js";
 
 describe("Admin Authentication", () => {
   describe("Password Hashing", () => {

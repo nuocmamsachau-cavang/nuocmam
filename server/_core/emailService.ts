@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import { getEmailConfig } from '../db';
+import { getEmailConfig } from '../db.js';
 
 export async function sendOrderConfirmationEmail(
   customerEmail: string,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { deriveAdEfficiency, summarizeAdTotals } from '../shared/adFeatures';
+import { deriveAdEfficiency, summarizeAdTotals } from '../shared/adFeatures.js';
 
 describe('ad metric aggregation', () => {
   it('calculates ROAS and efficiency metrics from real-shaped campaign rows', () => {

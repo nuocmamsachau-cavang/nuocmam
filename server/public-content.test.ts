@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { filterApprovedReviews, filterPublishedPosts } from '../client/src/lib/publicContent';
+import { filterApprovedReviews, filterPublishedPosts } from '../client/src/lib/publicContent.js';
 
 describe('Public content visibility', () => {
   it('keeps only published blog posts', () => {

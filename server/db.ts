@@ -1,10 +1,10 @@
 import { eq, and, desc, asc, sql, like, gte, lte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, categories, products, seoMetadata, orders, adminUsers, promotions, emailConfig, blogPosts, productReviews, productImages, ProductImage, websiteSettings, WebsiteSetting, adCampaigns, adMetrics, InsertAdCampaign, InsertAdMetric } from "../drizzle/schema";
-import { ENV } from './_core/env';
-import { getApprovedRatingSummary, matchesOrderStatus, matchesProductFilters, paginateItems, sortProducts, ProductSortOption, OrderStatus } from '../shared/catalogFeatures';
-import { buildDashboardMetrics, DashboardDateFilter } from '../shared/dashboardFeatures';
-import { deriveAdEfficiency } from '../shared/adFeatures';
+import { InsertUser, users, categories, products, seoMetadata, orders, adminUsers, promotions, emailConfig, blogPosts, productReviews, productImages, ProductImage, websiteSettings, WebsiteSetting, adCampaigns, adMetrics, InsertAdCampaign, InsertAdMetric } from "../drizzle/schema.js";
+import { ENV } from './_core/env.js';
+import { getApprovedRatingSummary, matchesOrderStatus, matchesProductFilters, paginateItems, sortProducts, ProductSortOption, OrderStatus } from '../shared/catalogFeatures.js';
+import { buildDashboardMetrics, DashboardDateFilter } from '../shared/dashboardFeatures.js';
+import { deriveAdEfficiency } from '../shared/adFeatures.js';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 

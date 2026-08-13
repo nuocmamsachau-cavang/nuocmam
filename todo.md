@@ -409,3 +409,8 @@
 - [x] Implement multi-channel advertising campaign metrics structure for Google Ads, Facebook Ads and TikTok Ads
 - [x] Integrate verified official channel links (Facebook, website, Instagram, TikTok, Google Maps)
 - [x] Secure dashboard access with admin authentication and prepare for Vercel deployment
+
+## Phase 6: Independent Deployment & Product Feed Sync Fix
+- [x] Xác định lỗi unauthenticated từ Manus publish API
+- [ ] Thiết lập giải pháp đồng bộ và triển khai trực tiếp không qua API token trung gian
+- [ ] Kiểm tra menu Đồng bộ danh mục trên giao diện trực tuyến

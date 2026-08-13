@@ -414,3 +414,12 @@
 - [x] Xác định lỗi unauthenticated từ Manus publish API
 - [ ] Thiết lập giải pháp đồng bộ và triển khai trực tiếp không qua API token trung gian
 - [ ] Kiểm tra menu Đồng bộ danh mục trên giao diện trực tuyến
+- [ ] Cấu hình DATABASE_URL và các biến môi trường bắt buộc cho deployment Vercel để đăng nhập dashboard hoạt động
+- [ ] Kiểm tra lại đăng nhập dashboard và menu Đồng bộ danh mục sau khi cấu hình môi trường
+
+## Phase 7: Vercel Environment Recovery
+- [ ] Kết nối dữ liệu backend hiện có hoặc cấu hình backend/database tương thích cho project Vercel
+- [ ] Xác minh URL Vercel mới có thể đăng nhập và truy cập Product Feed
+- [ ] Thiết lập auto-deploy từ GitHub branch product-feed-live sau khi môi trường hoạt động
+- [ ] Bảo đảm không tiếp tục phụ thuộc Manus API publish trong quy trình cập nhật mã nguồn
+    

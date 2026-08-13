@@ -183,7 +183,7 @@ export default function SaChauDashboard() {
               <ChartHeader icon={<Clock3 />} title="Đơn hàng gần đây" subtitle="Năm đơn mới nhất trong bộ lọc" />
               {dashboard.recentOrders.length ? (
                 <div className="space-y-3">
-                  {dashboard.recentOrders.map((order) => (
+                  {dashboard.recentOrders.map((order: any) => (
                     <div key={order.id} className="flex items-center justify-between gap-3 rounded-xl border border-amber-100 bg-amber-50/40 p-3">
                       <div className="min-w-0">
                         <p className="truncate font-bold text-slate-800">{order.orderNumber}</p>

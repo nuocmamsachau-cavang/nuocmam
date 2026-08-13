@@ -5,6 +5,7 @@ import { publicProcedure, router } from "./_core/trpc";
 import { notifyOwner } from "./_core/notification";
 import { storagePut } from "./storage";
 import { z } from "zod";
+import { fetchLegacyTrpc, hasLocalDatabase } from "./legacyData";
 import { getCategories, getCategoryById, getAllProducts, getProductRatingSummary, getProductById, updateProduct, deleteProduct, createProduct, getSeoMetadata, createOrder, getOrders, getAdminByUsername, getDb, getPromotions, createPromotion, updatePromotion, deletePromotion, getEmailConfig, saveEmailConfig, getBlogPosts, getBlogPostBySlug, createBlogPost, updateBlogPost, deleteBlogPost, getAllBlogPosts, getProductReviews, getApprovedReviews, createProductReview, getAllProductReviews, approveProductReview, setProductReviewApproval, getProductImages, getProductImageById, getBrandAssets, updateBrandAsset, createProductImage, updateProductImage, deleteProductImage, getSessionId, setSessionId, getLastDeploymentTime, setLastDeploymentTime, getDashboardMetrics, getAdCampaignOverview } from "./db";
 import { hashPassword, verifyPassword, generateAdminToken } from "./auth";
 import { categories, products, seoMetadata, orders, adminUsers, promotions, emailConfig, blogPosts, productReviews, productImages } from "../drizzle/schema";
@@ -29,6 +30,14 @@ export const appRouter = router({
     login: publicProcedure
       .input(z.object({ username: z.string(), password: z.string() }))
       .mutation(async ({ input }) => {
+        if (!hasLocalDatabase()) {
+          try {
+            return await fetchLegacyTrpc<{ token: string; admin: { id: number; username: string; email: string | null } }>('admin.login', input, 'POST');
+          } catch {
+            throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid credentials' });
+          }
+        }
+
         const admin = await getAdminByUsername(input.username);
         if (!admin || !verifyPassword(input.password, admin.passwordHash)) {
           throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid credentials' });
@@ -48,7 +57,7 @@ export const appRouter = router({
         maxPrice: z.number().nonnegative().optional(),
         sort: z.enum(['default', 'priceAsc', 'priceDesc', 'ratingDesc', 'salesDesc']).optional(),
       }).optional())
-      .query(({ input }) => getAllProducts(input ?? {})),
+      .query(async ({ input }) => hasLocalDatabase() ? getAllProducts(input ?? {}) : fetchLegacyTrpc<any[]>('products.list', input ?? {})),
     getById: publicProcedure.input(z.number()).query(({ input }) => getProductById(input)),
     create: publicProcedure
       .input(z.object({
@@ -134,7 +143,7 @@ export const appRouter = router({
       .input(z.object({
         status: z.enum(['all', 'pending', 'confirmed', 'shipped', 'delivered', 'cancelled']).optional(),
       }).optional())
-      .query(({ input }) => getOrders(input?.status ?? 'all')),
+      .query(async ({ input }) => hasLocalDatabase() ? getOrders(input?.status ?? 'all') : fetchLegacyTrpc<any[]>('orders.list', input ?? {})),
     create: publicProcedure
       .input(z.object({
         customerName: z.string(),
@@ -245,13 +254,13 @@ export const appRouter = router({
         startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
         endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
       }).optional())
-      .query(({ input }) => getDashboardMetrics(input ?? {})),
+      .query(async ({ input }) => hasLocalDatabase() ? getDashboardMetrics(input ?? {}) : fetchLegacyTrpc<any>('analytics.getDashboard', input ?? {})),
     getAds: publicProcedure
       .input(z.object({
         startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
         endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
       }).optional())
-      .query(({ input }) => getAdCampaignOverview(input ?? {})),
+      .query(async ({ input }) => hasLocalDatabase() ? getAdCampaignOverview(input ?? {}) : fetchLegacyTrpc<any>('analytics.getAds', input ?? {})),
   }),
 
   // Blog Posts
